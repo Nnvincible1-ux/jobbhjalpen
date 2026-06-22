@@ -1,0 +1,192 @@
+import type { Express, Request, Response } from "express";
+import express from "express";
+import { nanoid } from "nanoid";
+import {
+  createSession,
+  getServiceBySlug,
+  getSession,
+  getSessionByStripeId,
+  listServices,
+  markSessionPaid,
+  updateSession,
+} from "./db";
+import { extractText } from "./ai/fileProcessing";
+import { getStripe, isStripeConfigured } from "./payments/stripe";
+
+/**
+ * Custom Express routes (non-tRPC) for:
+ *  - File upload + pre-processing (validation BEFORE any LLM call)
+ *  - Stripe checkout creation + webhook (sole gate to unlock a session)
+ *  - Dynamic sitemap.xml
+ * All routes are mounted under /api/ so the gateway routes correctly.
+ */
+export function registerCustomRoutes(app: Express) {
+  // ---- Stripe webhook MUST use the raw body, register BEFORE json parser uses it ----
+  app.post(
+    "/api/stripe/webhook",
+    express.raw({ type: "application/json" }),
+    async (req: Request, res: Response) => {
+      if (!isStripeConfigured()) return res.status(503).send("stripe not configured");
+      const stripe = getStripe();
+      const sig = req.headers["stripe-signature"] as string | undefined;
+      const whSecret = process.env.STRIPE_WEBHOOK_SECRET;
+      let event;
+      try {
+        if (whSecret && sig) {
+          event = stripe.webhooks.constructEvent(req.body, sig, whSecret);
+        } else {
+          event = JSON.parse(req.body.toString());
+        }
+      } catch (err) {
+        return res.status(400).send(`Webhook Error: ${(err as Error).message}`);
+      }
+
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object as { id: string };
+        await markSessionPaid(session.id);
+      }
+      res.json({ received: true });
+    }
+  );
+
+  const router = express.Router();
+  router.use(express.json({ limit: "30mb" }));
+
+  // ---- Upload + pre-process. Creates an unpaid session. No LLM call here. ----
+  router.post("/upload", async (req: Request, res: Response) => {
+    try {
+      const { serviceSlug, fileBase64, fileName, mimeType, annonsText } = req.body as {
+        serviceSlug: string;
+        fileBase64: string;
+        fileName: string;
+        mimeType: string;
+        annonsText?: string;
+      };
+
+      const service = await getServiceBySlug(serviceSlug);
+      if (!service) return res.status(404).json({ ok: false, message: "Okänd tjänst." });
+
+      if (!fileBase64 || !fileName) {
+        return res.status(400).json({ ok: false, message: "Ingen fil mottagen." });
+      }
+
+      const buffer = Buffer.from(fileBase64.split(",").pop() || "", "base64");
+      // Size guard (10 MB)
+      if (buffer.length > 10 * 1024 * 1024) {
+        return res.status(400).json({ ok: false, message: "Filen är för stor (max 10 MB)." });
+      }
+
+      // PRE-PROCESSING: validate type + extract text. Rejects image-only PDFs.
+      const result = await extractText(buffer, fileName, mimeType || "");
+      if (!result.ok) {
+        return res.status(422).json({ ok: false, code: result.code, message: result.message });
+      }
+
+      const id = nanoid();
+      await createSession({
+        id,
+        serviceSlug,
+        paymentStatus: "unpaid",
+        status: "ready",
+        inputFileName: fileName,
+        inputText: result.text,
+        annonsText: annonsText || null,
+        remainingRounds: service.hasAdjustments ? service.maxRounds : 0,
+      });
+
+      return res.json({ ok: true, sessionId: id });
+    } catch (e) {
+      console.error("[upload] error", e);
+      return res.status(500).json({ ok: false, message: "Något gick fel vid uppladdningen." });
+    }
+  });
+
+  // ---- Create Stripe checkout session for a prepared session ----
+  router.post("/checkout", async (req: Request, res: Response) => {
+    try {
+      const { sessionId, origin } = req.body as { sessionId: string; origin: string };
+      const session = await getSession(sessionId);
+      if (!session) return res.status(404).json({ ok: false, message: "Session saknas." });
+      const service = await getServiceBySlug(session.serviceSlug);
+      if (!service) return res.status(404).json({ ok: false, message: "Tjänst saknas." });
+
+      if (!isStripeConfigured()) {
+        return res.status(503).json({ ok: false, message: "Betalning är inte konfigurerad ännu." });
+      }
+
+      const stripe = getStripe();
+      const checkout = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: [
+          {
+            price_data: {
+              currency: "sek",
+              product_data: { name: `Jobbhjälpen – ${service.slug}` },
+              unit_amount: service.priceSek * 100,
+            },
+            quantity: 1,
+          },
+        ],
+        success_url: `${origin}/resultat/${sessionId}?paid=1`,
+        cancel_url: `${origin}/tjanst/${service.slug}?avbruten=1`,
+        metadata: { sessionId },
+      });
+
+      await updateSession(sessionId, { stripeSessionId: checkout.id });
+      return res.json({ ok: true, url: checkout.url });
+    } catch (e) {
+      console.error("[checkout] error", e);
+      return res.status(500).json({ ok: false, message: "Kunde inte starta betalning." });
+    }
+  });
+
+  // ---- Confirm payment: verifies with Stripe directly. ----
+  // POC: when Stripe is NOT configured AND POC_DEMO_UNLOCK is enabled, the server
+  // itself unlocks the session. This is a deliberate server-side flag, never a
+  // client query param. In production (Stripe configured) this branch is dead and
+  // confirmed Stripe payment is the sole gate.
+  const pocDemoUnlock = () => !isStripeConfigured() && process.env.POC_DEMO_UNLOCK !== "false";
+  router.post("/confirm", async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = req.body as { sessionId: string };
+      const session = await getSession(sessionId);
+      if (!session) return res.status(404).json({ ok: false, message: "Session saknas." });
+      if (session.paymentStatus === "paid") return res.json({ ok: true, paid: true });
+
+      if (session.stripeSessionId && isStripeConfigured()) {
+        const stripe = getStripe();
+        const checkout = await stripe.checkout.sessions.retrieve(session.stripeSessionId);
+        if (checkout.payment_status === "paid") {
+          await markSessionPaid(session.stripeSessionId);
+          return res.json({ ok: true, paid: true });
+        }
+      }
+
+      if (pocDemoUnlock()) {
+        await updateSession(sessionId, { paymentStatus: "paid" });
+        return res.json({ ok: true, paid: true, demo: true });
+      }
+
+      return res.json({ ok: true, paid: false });
+    } catch (e) {
+      console.error("[confirm] error", e);
+      return res.status(500).json({ ok: false, message: "Kunde inte bekräfta betalning." });
+    }
+  });
+
+  app.use("/api/service", router);
+
+  // ---- Dynamic sitemap ----
+  app.get("/sitemap.xml", async (_req: Request, res: Response) => {
+    const base = process.env.PUBLIC_BASE_URL || "https://jobbhjalpen.manus.space";
+    const services = await listServices();
+    const urls = ["/", "/integritet", ...services.map((s) => `/tjanst/${s.slug}`)];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
+      .map((u) => `  <url><loc>${base}${u}</loc></url>`)
+      .join("\n")}\n</urlset>`;
+    res.header("Content-Type", "application/xml").header("Cache-Control", "public, max-age=3600").send(xml);
+  });
+}
+
+// expose getSessionByStripeId for potential reuse
+export { getSessionByStripeId };

@@ -1,17 +1,11 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
  * Columns use camelCase to match both database fields and generated types.
  */
 export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
   id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
@@ -25,4 +19,128 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Services catalog. Each row is a sellable AI micro-service (49 kr).
+ * `promptKey` maps to a locked system prompt in server/ai/prompts.ts.
+ */
+export const services = mysqlTable("services", {
+  id: int("id").autoincrement().primaryKey(),
+  slug: varchar("slug", { length: 64 }).notNull().unique(),
+  category: mysqlEnum("category", ["job", "private"]).notNull(),
+  priceSek: int("priceSek").notNull().default(49),
+  promptKey: varchar("promptKey", { length: 64 }).notNull(),
+  hasAdjustments: boolean("hasAdjustments").default(false).notNull(),
+  maxRounds: int("maxRounds").default(0).notNull(),
+  acceptsAnnons: boolean("acceptsAnnons").default(false).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Service = typeof services.$inferSelect;
+export type InsertService = typeof services.$inferInsert;
+
+/**
+ * Text CMS — every user-facing string. Draft/publish via isDraft.
+ * Frontend reads only isDraft=false unless ?preview=draft.
+ */
+export const cmsContent = mysqlTable("cms_content", {
+  id: int("id").autoincrement().primaryKey(),
+  textKey: varchar("textKey", { length: 255 }).notNull().unique(),
+  content: text("content").notNull(), // published value (public site reads this)
+  defaultContent: text("defaultContent").notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  category: varchar("category", { length: 64 }).notNull().default("general"),
+  draftContent: text("draftContent"), // unpublished edit; null when no pending draft
+  hasDraft: boolean("hasDraft").default(false).notNull(),
+  isDraft: boolean("isDraft").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CmsContent = typeof cmsContent.$inferSelect;
+
+/**
+ * Style editor — CSS custom properties editable from admin.
+ */
+export const cmsStyles = mysqlTable("cms_styles", {
+  id: int("id").autoincrement().primaryKey(),
+  styleKey: varchar("styleKey", { length: 255 }).notNull().unique(),
+  value: varchar("value", { length: 512 }).notNull(),
+  defaultValue: varchar("defaultValue", { length: 512 }).notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  category: varchar("category", { length: 64 }).notNull().default("colors"),
+  cssVar: varchar("cssVar", { length: 128 }),
+  inputType: varchar("inputType", { length: 32 }).notNull().default("color"),
+  sortOrder: int("sortOrder").notNull().default(0),
+  draftValue: varchar("draftValue", { length: 512 }),
+  hasDraft: boolean("hasDraft").default(false).notNull(),
+  isDraft: boolean("isDraft").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CmsStyle = typeof cmsStyles.$inferSelect;
+
+/**
+ * FAQ entries — editable, draft/publish.
+ */
+export const cmsFaq = mysqlTable("cms_faq", {
+  id: int("id").autoincrement().primaryKey(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  sortOrder: int("sortOrder").notNull().default(0),
+  draftQuestion: text("draftQuestion"),
+  draftAnswer: text("draftAnswer"),
+  hasDraft: boolean("hasDraft").default(false).notNull(),
+  isDraft: boolean("isDraft").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CmsFaq = typeof cmsFaq.$inferSelect;
+
+/**
+ * Revision history — audit trail for content/publish actions.
+ */
+export const cmsRevisions = mysqlTable("cms_revisions", {
+  id: int("id").autoincrement().primaryKey(),
+  adminName: varchar("adminName", { length: 255 }),
+  entityType: mysqlEnum("entityType", ["text", "style", "faq", "publish"]).notNull(),
+  entityKey: varchar("entityKey", { length: 255 }),
+  beforeValue: text("beforeValue"),
+  afterValue: text("afterValue"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+/**
+ * Service session — one purchase/run of a service.
+ * paymentStatus gates everything: AI only runs when 'paid'.
+ * remainingRounds persists adjustment-round state in DB (never client).
+ */
+export const serviceSessions = mysqlTable("service_sessions", {
+  id: varchar("id", { length: 40 }).primaryKey(), // nanoid
+  serviceSlug: varchar("serviceSlug", { length: 64 }).notNull(),
+  userId: int("userId"),
+  paymentStatus: mysqlEnum("paymentStatus", ["unpaid", "paid"]).default("unpaid").notNull(),
+  stripeSessionId: varchar("stripeSessionId", { length: 255 }),
+  status: mysqlEnum("status", ["created", "ready", "processing", "completed", "locked"]).default("created").notNull(),
+  inputFileKey: varchar("inputFileKey", { length: 512 }),
+  inputFileName: varchar("inputFileName", { length: 512 }),
+  inputText: text("inputText"), // extracted CV / document text
+  annonsText: text("annonsText"), // optional job ad text
+  remainingRounds: int("remainingRounds").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ServiceSession = typeof serviceSessions.$inferSelect;
+export type InsertServiceSession = typeof serviceSessions.$inferInsert;
+
+/**
+ * Messages within a session: initial result + adjustment exchanges.
+ */
+export const sessionMessages = mysqlTable("session_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: varchar("sessionId", { length: 40 }).notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SessionMessage = typeof sessionMessages.$inferSelect;

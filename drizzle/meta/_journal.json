@@ -1,5 +1,34 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1782099189233,
+      "tag": "0000_material_husk",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1782099377957,
+      "tag": "0001_youthful_omega_flight",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1782099615184,
+      "tag": "0002_fast_miek",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1782101490725,
+      "tag": "0003_large_forge",
+      "breakpoints": true
+    }
+  ]
 }

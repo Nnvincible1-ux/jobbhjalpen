@@ -1,0 +1,1 @@
+ALTER TABLE `cms_content` ADD CONSTRAINT `cms_content_textKey_unique` UNIQUE(`textKey`);
