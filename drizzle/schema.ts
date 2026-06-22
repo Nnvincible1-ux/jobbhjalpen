@@ -127,6 +127,9 @@ export const serviceSessions = mysqlTable("service_sessions", {
   inputText: text("inputText"), // extracted CV / document text
   annonsText: text("annonsText"), // optional job ad text
   remainingRounds: int("remainingRounds").default(0).notNull(),
+  tenantId: int("tenantId"),
+  participantId: int("participantId"),
+  coachUserId: int("coachUserId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -144,3 +147,68 @@ export const sessionMessages = mysqlTable("session_messages", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type SessionMessage = typeof sessionMessages.$inferSelect;
+
+/* ----------------------------- Multi-tenant ----------------------------- */
+
+/**
+ * Tenants. The consumer site is the 'default' tenant. Coach companies get
+ * their own tenant with white-label branding.
+ */
+export const tenants = mysqlTable("tenants", {
+  id: int("id").autoincrement().primaryKey(),
+  slug: varchar("slug", { length: 64 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: mysqlEnum("type", ["consumer", "coach"]).default("coach").notNull(),
+  logoText: varchar("logoText", { length: 64 }),
+  colorPrimary: varchar("colorPrimary", { length: 32 }),
+  colorAccent: varchar("colorAccent", { length: 32 }),
+  tagline: varchar("tagline", { length: 512 }),
+  status: mysqlEnum("status", ["active", "suspended"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Tenant = typeof tenants.$inferSelect;
+export type InsertTenant = typeof tenants.$inferInsert;
+
+/** Membership links a user to a tenant with an org role. */
+export const memberships = mysqlTable("memberships", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  tenantId: int("tenantId").notNull(),
+  orgRole: mysqlEnum("orgRole", ["org_admin", "coach"]).default("coach").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type Membership = typeof memberships.$inferSelect;
+
+/** Participants are job seekers managed by a coach inside a tenant. */
+export const participants = mysqlTable("participants", {
+  id: int("id").autoincrement().primaryKey(),
+  tenantId: int("tenantId").notNull(),
+  coachUserId: int("coachUserId").notNull(),
+  fullName: varchar("fullName", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  note: text("note"),
+  status: mysqlEnum("status", ["active", "placed", "archived"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Participant = typeof participants.$inferSelect;
+export type InsertParticipant = typeof participants.$inferInsert;
+
+/**
+ * Organisation subscription. Coach tenants are billed per coach/participant or
+ * a flat platform fee. The consumer 49 kr flow is independent of this.
+ */
+export const subscriptions = mysqlTable("subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  tenantId: int("tenantId").notNull().unique(),
+  plan: mysqlEnum("plan", ["per_coach", "per_participant", "platform"]).default("per_coach").notNull(),
+  seats: int("seats").default(1).notNull(),
+  status: mysqlEnum("status", ["trial", "active", "past_due", "canceled"]).default("trial").notNull(),
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  currentPeriodEnd: timestamp("currentPeriodEnd"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Subscription = typeof subscriptions.$inferSelect;

@@ -1,9 +1,13 @@
 import { Link } from "wouter";
 import { useCms } from "@/contexts/CmsContext";
+import { useTenant } from "@/contexts/TenantContext";
 
 export function SiteHeader() {
   const { getText } = useCms();
-  const brand = getText("brand.name", "Jobbhjälpen");
+  const { tenant } = useTenant();
+  const isCoach = tenant?.type === "coach";
+  const brand = isCoach ? tenant!.name : getText("brand.name", "Jobbhjälpen");
+  const logoChar = isCoach ? (tenant!.logoText || tenant!.name.charAt(0)) : "J";
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
       <div className="container flex h-16 items-center justify-between">
@@ -12,7 +16,7 @@ export function SiteHeader() {
             className="grid h-8 w-8 place-items-center rounded-md text-sm font-bold text-white"
             style={{ background: "var(--brand-primary)" }}
           >
-            J
+            {logoChar}
           </span>
           <span className="font-display text-lg font-semibold">{brand}</span>
         </Link>
@@ -41,14 +45,18 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   const { getText } = useCms();
+  const { tenant } = useTenant();
+  const isCoach = tenant?.type === "coach";
+  const brand = isCoach ? tenant!.name : getText("brand.name", "Jobbhjälpen");
+  const tagline = isCoach
+    ? (tenant!.tagline || "")
+    : getText("footer.tagline", "Specialiserade dokumenttjänster för jobbsök och privatliv.");
   return (
     <footer className="mt-24 border-t">
       <div className="container flex flex-col items-start justify-between gap-4 py-10 sm:flex-row sm:items-center">
         <div>
-          <p className="font-display text-base font-semibold">{getText("brand.name", "Jobbhjälpen")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {getText("footer.tagline", "Specialiserade dokumenttjänster för jobbsök och privatliv.")}
-          </p>
+          <p className="font-display text-base font-semibold">{brand}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{tagline}</p>
         </div>
         <div className="flex gap-6 text-sm text-muted-foreground">
           <Link href="/integritet" className="hover:text-foreground">

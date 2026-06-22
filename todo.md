@@ -40,7 +40,7 @@
 
 ## Docs & Repo
 - [x] README + docs (SERVICES, PROMPT_ARCHITECTURE, COST_MARGIN, TECHNICAL_DECISIONS, MIGRATION, STRATEGY)
-- [ ] New private GitHub repo + push
+- [x] New private GitHub repo + push (Nnvincible1-ux/jobbhjalpen)
 - [x] vitest: file validation, prompt guardrails, payment gate, round counter (10 tests pass)
 
 ## VPS / Deploy (Option B)
@@ -51,3 +51,25 @@
 ## Verify
 - [x] Screenshots of landing, service, admin
 - [x] All tests pass (10/10)
+
+## SaaS / White-label (multi-tenant) — utöver konsument
+- [x] tenants-tabell (namn, slug/subdomän, branding, status)
+- [x] Koppla tenantId till sessioner; tenants/memberships/participants/subscriptions
+- [x] Tenant-resolver: läs tenant från subdomän/host (?tenant= för dev), fallback default
+- [x] Tenant-styrd branding (logo/färger/tagline) i header/footer + CSS-variabler
+- [x] Organisationsroller: org_admin, coach (memberships-tabell)
+- [x] Behörighet: coach ser bara sin organisations data (assertTenantAccess)
+- [x] Deltagare-tabell (participants) kopplad till tenant + coach
+- [x] Handledar-UI (/coach): lägg upp deltagare, statusbyte, starta tjänst
+- [x] Org-fakturering (datamodell + visning): subscriptions (per coach/per deltagare/plattform)
+- [x] Tester: tenant-isolering, branding-resolver, rollbehörighet (19/19 pass)
+- [x] SAAS_WHITELABEL.md
+
+## SaaS end-to-end (uppföljning efter självgranskning)
+- [x] Sessioner bär tenantId/participantId/coachUserId; coach-start skapar sådan session
+- [x] coach.myOrgs returnerar riktiga medlemskap för icke-admin (listUserOrgs)
+- [x] Handledare kan skapa membership (coach.addCoach, org_admin/plattformsadmin)
+- [x] "Starta tjänst" i portalen: org-kontext-uppladdning -> org-betald session -> resultat
+- [x] Org-faktureringsmodell + visning (subscriptions) klar; org-sessioner bär coachUserId
+- [ ] Skarp Stripe Billing-prenumeration (aktiveras när Stripe-nycklar finns; konsument-Stripe likadant vilande)
+- [x] README uppdaterad med white-label/SaaS-arkitektur

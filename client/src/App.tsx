@@ -5,12 +5,14 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { CmsProvider } from "./contexts/CmsContext";
+import { TenantProvider } from "./contexts/TenantContext";
 import { CookieConsent } from "./components/CookieConsent";
 import Home from "./pages/Home";
 import ServicePage from "./pages/ServicePage";
 import ResultPage from "./pages/ResultPage";
 import Privacy from "./pages/Privacy";
 import AdminPage from "./pages/AdminPage";
+import CoachPage from "./pages/CoachPage";
 
 function Router() {
   return (
@@ -19,6 +21,7 @@ function Router() {
       <Route path="/tjanst/:slug" component={ServicePage} />
       <Route path="/resultat/:id" component={ResultPage} />
       <Route path="/integritet" component={Privacy} />
+      <Route path="/coach" component={CoachPage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
@@ -31,11 +34,13 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
-          <CmsProvider>
-            <Toaster richColors position="top-center" />
-            <Router />
-            <CookieConsent />
-          </CmsProvider>
+          <TenantProvider>
+            <CmsProvider>
+              <Toaster richColors position="top-center" />
+              <Router />
+              <CookieConsent />
+            </CmsProvider>
+          </TenantProvider>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

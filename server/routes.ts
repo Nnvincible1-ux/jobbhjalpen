@@ -12,6 +12,9 @@ import {
 } from "./db";
 import { extractText } from "./ai/fileProcessing";
 import { getStripe, isStripeConfigured } from "./payments/stripe";
+import { getTenantBySlug, resolveTenantSlug } from "./tenant";
+import { sdk } from "./_core/sdk";
+import { getMembership } from "./db";
 
 /**
  * Custom Express routes (non-tRPC) for:
@@ -52,19 +55,59 @@ export function registerCustomRoutes(app: Express) {
   const router = express.Router();
   router.use(express.json({ limit: "30mb" }));
 
+  // ---- Resolve active tenant (branding) from host/subdomain. Public. ----
+  router.get("/tenant", async (req: Request, res: Response) => {
+    const slug = resolveTenantSlug(req);
+    const tenant = await getTenantBySlug(slug);
+    if (!tenant) return res.json({ slug: "default", name: "Jobbhjälpen", type: "consumer" });
+    return res.json({
+      slug: tenant.slug,
+      name: tenant.name,
+      type: tenant.type,
+      logoText: tenant.logoText,
+      colorPrimary: tenant.colorPrimary,
+      colorAccent: tenant.colorAccent,
+      tagline: tenant.tagline,
+    });
+  });
+
   // ---- Upload + pre-process. Creates an unpaid session. No LLM call here. ----
   router.post("/upload", async (req: Request, res: Response) => {
     try {
-      const { serviceSlug, fileBase64, fileName, mimeType, annonsText } = req.body as {
+      const { serviceSlug, fileBase64, fileName, mimeType, annonsText, tenantId, participantId } = req.body as {
         serviceSlug: string;
         fileBase64: string;
         fileName: string;
         mimeType: string;
         annonsText?: string;
+        tenantId?: number;
+        participantId?: number;
       };
 
       const service = await getServiceBySlug(serviceSlug);
       if (!service) return res.status(404).json({ ok: false, message: "Okänd tjänst." });
+
+      // Org context: a coach uploads on behalf of a participant. The org
+      // subscribes, so the session is created already paid (no 49 kr flow).
+      // SECURITY: org mode requires an authenticated user with access to the
+      // tenant. Otherwise we fall back to the normal unpaid consumer flow so a
+      // caller cannot forge a free (paid) session by sending tenant ids.
+      let isOrg = false;
+      let orgCoachUserId: number | null = null;
+      if (typeof tenantId === "number" && typeof participantId === "number") {
+        try {
+          const user = await sdk.authenticateRequest(req as never);
+          if (user) {
+            const membership = await getMembership(user.id, tenantId);
+            if (user.role === "admin" || membership) {
+              isOrg = true;
+              orgCoachUserId = user.id;
+            }
+          }
+        } catch {
+          isOrg = false;
+        }
+      }
 
       if (!fileBase64 || !fileName) {
         return res.status(400).json({ ok: false, message: "Ingen fil mottagen." });
@@ -86,15 +129,18 @@ export function registerCustomRoutes(app: Express) {
       await createSession({
         id,
         serviceSlug,
-        paymentStatus: "unpaid",
+        paymentStatus: isOrg ? "paid" : "unpaid",
         status: "ready",
         inputFileName: fileName,
         inputText: result.text,
         annonsText: annonsText || null,
         remainingRounds: service.hasAdjustments ? service.maxRounds : 0,
+        tenantId: isOrg ? tenantId : null,
+        participantId: isOrg ? participantId : null,
+        coachUserId: isOrg ? orgCoachUserId : null,
       });
 
-      return res.json({ ok: true, sessionId: id });
+      return res.json({ ok: true, sessionId: id, org: isOrg });
     } catch (e) {
       console.error("[upload] error", e);
       return res.status(500).json({ ok: false, message: "Något gick fel vid uppladdningen." });

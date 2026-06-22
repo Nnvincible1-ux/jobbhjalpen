@@ -5,11 +5,16 @@ import {
   cmsFaq,
   cmsRevisions,
   cmsStyles,
+  InsertParticipant,
   InsertServiceSession,
   InsertUser,
+  memberships,
+  participants,
+  subscriptions,
   serviceSessions,
   sessionMessages,
   services,
+  tenants,
   users,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -67,6 +72,113 @@ export async function getUserByOpenId(openId: string) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+/* ------------------------------- Tenants -------------------------------- */
+
+export async function listTenants() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tenants);
+}
+
+export async function getTenantById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(tenants).where(eq(tenants.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function createTenant(input: { slug: string; name: string; logoText?: string; colorPrimary?: string; colorAccent?: string; tagline?: string }) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(tenants).values({ ...input, type: "coach" });
+}
+
+export async function getMembership(userId: number, tenantId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(memberships).where(and(eq(memberships.userId, userId), eq(memberships.tenantId, tenantId))).limit(1);
+  return rows[0];
+}
+
+export async function addMembership(userId: number, tenantId: number, orgRole: "org_admin" | "coach") {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(memberships).values({ userId, tenantId, orgRole });
+}
+
+export async function listMembershipsForTenant(tenantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(memberships).where(eq(memberships.tenantId, tenantId));
+}
+
+/** All tenants a user belongs to, with org role and tenant name/slug. */
+export async function listUserOrgs(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select({
+      tenantId: tenants.id,
+      name: tenants.name,
+      slug: tenants.slug,
+      orgRole: memberships.orgRole,
+    })
+    .from(memberships)
+    .innerJoin(tenants, eq(memberships.tenantId, tenants.id))
+    .where(eq(memberships.userId, userId));
+  return rows;
+}
+
+/* ------------------------------ Billing --------------------------------- */
+
+export async function getSubscription(tenantId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(subscriptions).where(eq(subscriptions.tenantId, tenantId)).limit(1);
+  return rows[0];
+}
+
+export async function upsertSubscription(tenantId: number, patch: { plan?: "per_coach" | "per_participant" | "platform"; seats?: number; status?: "trial" | "active" | "past_due" | "canceled"; stripeCustomerId?: string; stripeSubscriptionId?: string }) {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await getSubscription(tenantId);
+  if (existing) {
+    await db.update(subscriptions).set(patch).where(eq(subscriptions.tenantId, tenantId));
+  } else {
+    await db.insert(subscriptions).values({ tenantId, ...patch });
+  }
+}
+
+/* ------------------------------ Participants ---------------------------- */
+
+export async function createParticipant(input: { tenantId: number; coachUserId: number; fullName: string; email?: string; note?: string }) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(participants).values(input);
+}
+
+export async function listParticipants(tenantId: number, coachUserId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  if (coachUserId !== undefined) {
+    return db.select().from(participants).where(and(eq(participants.tenantId, tenantId), eq(participants.coachUserId, coachUserId))).orderBy(asc(participants.createdAt));
+  }
+  return db.select().from(participants).where(eq(participants.tenantId, tenantId)).orderBy(asc(participants.createdAt));
+}
+
+export async function getParticipant(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(participants).where(eq(participants.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function updateParticipant(id: number, patch: Partial<InsertParticipant>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(participants).set(patch).where(eq(participants.id, id));
 }
 
 /* ------------------------------- Services ------------------------------- */

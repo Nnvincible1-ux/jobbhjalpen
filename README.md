@@ -65,6 +65,18 @@ Se [`.env.example`](.env.example). I POC-läge (utan `STRIPE_SECRET_KEY`) faller
 
 Projektet är byggt VPS-portabelt. Guide för att flytta från Manus WebDev till egen VPS finns i [`docs/MIGRATION.md`](docs/MIGRATION.md).
 
+## White-label SaaS för jobbcoach-bolag
+
+Utöver konsumenttjänsten (49 kr per styck) kan plattformen köras som multi-tenant white-label för jobbcoach-bolag (Rusta och matcha-leverantörer). Konsumentsajten är `default`-tenanten; varje coach-bolag får en egen tenant med eget namn, logga, färger och subdomän.
+
+- **Tenant-resolver** (`server/tenant.ts`) läser tenant från subdomän/host, med `?tenant=slug` för dev. Branding laddas via `/api/service/tenant` och appliceras i `TenantContext`.
+- **Roller** via `memberships` (`org_admin`, `coach`). En handledare ser bara sin organisations deltagare (`assertTenantAccess`).
+- **Handledarportal** på `/coach`: lägg upp deltagare, byt status, och starta tjänster i deltagar-/organisationskontext. Sådana sessioner är org-betalda (ingår i abonnemang) i stället för 49 kr.
+- **Org-fakturering** via `subscriptions` (per handledare / per deltagare / plattformsavgift), separat från konsumentens 49 kr-flöde.
+- **Säkerhet**: org-uppladdning kräver autentiserad användare med medlemskap i tenanten, annars faller flödet tillbaka till vanlig (obetald) konsumentsession.
+
+Affärsunderlag och utbyggnad: se [`docs/SAAS_WHITELABEL.md`](docs/SAAS_WHITELABEL.md).
+
 ## Dokumentation
 
 - [`docs/SERVICES.md`](docs/SERVICES.md) – tjänstebeskrivningar
@@ -72,3 +84,4 @@ Projektet är byggt VPS-portabelt. Guide för att flytta från Manus WebDev till
 - [`docs/COST_MARGIN.md`](docs/COST_MARGIN.md) – kostnads- och marginalanalys
 - [`docs/TECHNICAL_DECISIONS.md`](docs/TECHNICAL_DECISIONS.md) – tekniska beslut
 - [`docs/MIGRATION.md`](docs/MIGRATION.md) – VPS-migrationsguide
+- [`docs/SAAS_WHITELABEL.md`](docs/SAAS_WHITELABEL.md) – white-label/SaaS-modell för jobbcoach-bolag
