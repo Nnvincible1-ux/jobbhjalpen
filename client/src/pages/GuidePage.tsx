@@ -38,7 +38,7 @@ export default function GuidePage() {
   }, [article, allGuides]);
 
   useSEO({
-    title: article?.metaTitle ?? "Guide | Jobbhjälpen",
+    title: article?.metaTitle ?? "Guide | CV-piloten",
     description: article?.metaDescription ?? "",
     path: `/guider/${slug}`,
   });
@@ -52,7 +52,7 @@ export default function GuidePage() {
           headline: article.title,
           description: article.metaDescription,
           inLanguage: "sv-SE",
-          author: { "@type": "Organization", name: "Jobbhjälpen" },
+          author: { "@type": "Organization", name: "CV-piloten" },
         }
       : null
   );

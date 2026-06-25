@@ -29,7 +29,7 @@ const SERVICES: ServiceSeed[] = [
 
 // textKey -> [label, defaultContent, category]
 const TEXTS: [string, string, string, string][] = [
-  ["brand.name", "Varumärkesnamn", "Jobbhjälpen", "brand"],
+  ["brand.name", "Varumärkesnamn", "CV-piloten", "brand"],
   ["hero.eyebrow", "Hero etikett", "Erfarenhet och teknik", "hero"],
   ["hero.title", "Hero rubrik", "Ett vassare CV på några minuter", "hero"],
   ["hero.subtitle", "Hero underrubrik", "Vi hjälper dig skriva CV, personligt brev och mer. Du laddar upp ditt underlag och får tillbaka ett genomarbetat resultat. Du betalar en gång och slipper abonnemang.", "hero"],

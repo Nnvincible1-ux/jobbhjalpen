@@ -105,7 +105,7 @@ function AdminPanel() {
       <header className="sticky top-0 z-30 border-b bg-background">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="font-display text-lg font-semibold">Jobbhjälpen · Admin</span>
+            <span className="font-display text-lg font-semibold">CV-piloten · Admin</span>
             {hasDrafts && (
               <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
                 Opublicerade ändringar

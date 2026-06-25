@@ -7,7 +7,7 @@ import { useSEO } from "@/lib/seo";
 export default function GuidesPage() {
   const { data: guides, isLoading } = trpc.guides.list.useQuery();
   useSEO({
-    title: "Guider om CV, personligt brev och intervju | Jobbhjälpen",
+    title: "Guider om CV, personligt brev och intervju | CV-piloten",
     description:
       "Expertguider om att skriva CV, personligt brev och förbereda intervju. Konkreta råd som hjälper dig vidare till nästa jobb.",
     path: "/guider",

@@ -31,7 +31,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         if (t.colorPrimary) document.documentElement.style.setProperty("--brand-primary", t.colorPrimary);
         if (t.colorAccent) document.documentElement.style.setProperty("--brand-accent", t.colorAccent);
       })
-      .catch(() => setTenant({ slug: "default", name: "Jobbhjälpen", type: "consumer" }))
+      .catch(() => setTenant({ slug: "default", name: "CV-piloten", type: "consumer" }))
       .finally(() => setLoading(false));
   }, []);
 

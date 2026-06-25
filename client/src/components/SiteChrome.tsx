@@ -6,8 +6,8 @@ export function SiteHeader() {
   const { getText } = useCms();
   const { tenant } = useTenant();
   const isCoach = tenant?.type === "coach";
-  const brand = isCoach ? tenant!.name : getText("brand.name", "Jobbhjälpen");
-  const logoChar = isCoach ? (tenant!.logoText || tenant!.name.charAt(0)) : "J";
+  const brand = isCoach ? tenant!.name : getText("brand.name", "CV-piloten");
+  const logoChar = isCoach ? (tenant!.logoText || tenant!.name.charAt(0)) : brand.charAt(0);
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
       <div className="container flex h-16 items-center justify-between">
@@ -50,7 +50,7 @@ export function SiteFooter() {
   const { getText } = useCms();
   const { tenant } = useTenant();
   const isCoach = tenant?.type === "coach";
-  const brand = isCoach ? tenant!.name : getText("brand.name", "Jobbhjälpen");
+  const brand = isCoach ? tenant!.name : getText("brand.name", "CV-piloten");
   const tagline = isCoach
     ? (tenant!.tagline || "")
     : getText("footer.tagline", "Dokumenttjänster som hjälper dig vidare i jobbsöket.");

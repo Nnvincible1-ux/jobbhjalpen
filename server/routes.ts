@@ -60,7 +60,7 @@ export function registerCustomRoutes(app: Express) {
   router.get("/tenant", async (req: Request, res: Response) => {
     const slug = resolveTenantSlug(req);
     const tenant = await getTenantBySlug(slug);
-    if (!tenant) return res.json({ slug: "default", name: "Jobbhjälpen", type: "consumer" });
+    if (!tenant) return res.json({ slug: "default", name: "CV-piloten", type: "consumer" });
     return res.json({
       slug: tenant.slug,
       name: tenant.name,
@@ -168,7 +168,7 @@ export function registerCustomRoutes(app: Express) {
           {
             price_data: {
               currency: "sek",
-              product_data: { name: `Jobbhjälpen – ${service.slug}` },
+              product_data: { name: `CV-piloten – ${service.slug}` },
               unit_amount: service.priceSek * 100,
             },
             quantity: 1,

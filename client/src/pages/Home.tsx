@@ -16,9 +16,9 @@ export default function Home() {
   const { getText, faq } = useCms();
   const { data: services } = trpc.services.list.useQuery();
   useSEO({
-    title: "Jobbhjälpen – CV, personligt brev och intervjuhjälp",
+    title: "CV-piloten – CV, personligt brev och intervjuhjälp",
     description:
-      "Jobbhjälpen hjälper dig skriva CV, personligt brev och förbereda intervju. Genomarbetat resultat på minuter, fast pris 49 kr per tjänst.",
+      "CV-piloten hjälper dig skriva CV, personligt brev och förbereda intervju. Genomarbetat resultat på minuter, fast pris 49 kr per tjänst.",
     path: "/",
   });
 
