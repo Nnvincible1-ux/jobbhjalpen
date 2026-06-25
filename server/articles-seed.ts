@@ -19,6 +19,45 @@ export type ArticleSeed = {
 
 export const ARTICLES: ArticleSeed[] = [
   {
+    slug: "soka-jobb",
+    kind: "pillar",
+    title: "Söka jobb: en komplett guide från CV till intervju",
+    metaTitle: "Söka jobb 2026 – komplett guide som tar dig till intervju",
+    metaDescription:
+      "En komplett guide till att söka jobb: skriva CV, personligt brev, optimera LinkedIn och förbereda intervju. Allt på ett ställe.",
+    excerpt:
+      "Hela vägen från CV till intervju, samlat på ett ställe. Börja här och följ länkarna vidare till varje del.",
+    keyword: "söka jobb",
+    relatedSlugs: "skriva-cv,personligt-brev,intervjufragor,ats-cv",
+    ctaServiceSlug: "cv-granskning",
+    faqJson: JSON.stringify([
+      { q: "I vilken ordning bör jag göra saker när jag söker jobb?", a: "Börja med ett starkt CV, skriv sedan ett personligt brev anpassat efter tjänsten, se över din LinkedIn och förbered dig till sist inför intervjun." },
+      { q: "Hur lång tid tar det att söka ett jobb ordentligt?", a: "Räkna med några timmar per ansökan om du anpassar CV och brev efter tjänsten. Det lönar sig jämfört med att skicka samma generella ansökan överallt." },
+    ]),
+    sortOrder: 0,
+    body: `Att söka jobb är en process med flera steg, och det är lätt att fastna i ett av dem och glömma helheten. Den här guiden ger dig överblicken och länkar vidare till varje del när du vill gå på djupet.
+
+## Börja med ett CV som håller
+
+CV:t är grunden. Det ska snabbt visa en rekryterare att du passar för tjänsten. Läs vår guide om att skriva CV för struktur, profiltext och hur du beskriver erfarenhet med resultat. Behöver du en mall eller exempel finns guider för det också.
+
+## Skriv ett personligt brev som kompletterar
+
+När CV:t sitter är det dags för det personliga brevet. Där förklarar du med egna ord varför just du passar. Vår guide om personligt brev visar hur du fångar intresset och kopplar din erfarenhet till tjänsten.
+
+## Se till att du syns rätt
+
+Många rekryterare tittar på din LinkedIn innan de björ in till intervju. En profil som speglar ditt CV och använder rätt sökord gör dig lättare att hitta. Det är också värt att se till att ditt CV klarar de rekryteringssystem som många företag använder.
+
+## Förbered dig inför intervjun
+
+Sista steget är intervjun, och där vinner den som förberett sig. Vår guide om intervjufrågor går igenom de vanligaste frågorna och hur du svarar på dem med konkreta exempel.
+
+## Anpassa varje ansökan
+
+Den röda tråden genom hela jobbsöket är anpassning. Ett CV och ett brev som är skräddarsydda efter tjänsten slår en generell ansökan varje gång. När du vill ha hjälp på vägen kan du använda våra tjänster för att anpassa ditt CV mot en annons eller få det granskat av en expert.`,
+  },
+  {
     slug: "skriva-cv",
     kind: "pillar",
     title: "Skriva CV: så bygger du ett CV som ger intervju",

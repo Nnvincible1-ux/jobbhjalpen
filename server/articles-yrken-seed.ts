@@ -81,6 +81,50 @@ const YRKEN: Yrke[] = [
       "En till två sidor. Sätt teknisk kompetens och certifikat överst, följt av erfarenhet. Spegla de system som nämns i annonsen.",
   },
   {
+    slug: "cv-exempel-underskoterska",
+    yrke: "undersköterska",
+    keyword: "cv exempel undersköterska",
+    intro:
+      "Som undersköterska bedöms du på din omvårdnadserfarenhet, vilka verksamheter du arbetat i och hur du bemöter patienter och boende. Ett tydligt CV gör det lätt för en chef att se att du passar.",
+    styrkor:
+      "Lyft fram utbildning och vilka verksamheter du arbetat i, som äldreomsorg, sjukhus eller hemtjänst. Beskriv konkreta arbetsuppgifter och ansvar, och ta med eventuella vidareutbildningar inom till exempel demens eller palliativ vård.",
+    format:
+      "En sida räcker oftast. Sätt utbildning och erfarenhet överst. Var tydlig med var och hur länge du arbetat, och ta med tillgänglighet för schema och helger.",
+  },
+  {
+    slug: "cv-exempel-larare",
+    yrke: "lärare",
+    keyword: "cv exempel lärare",
+    intro:
+      "Som lärare väger legitimation, ämnesbehörighet och din pedagogiska erfarenhet tungt. Rektorn vill snabbt se vilka stadier och ämnen du kan undervisa i.",
+    styrkor:
+      "Sätt legitimation och behöriga ämnen och stadier högt upp. Beskriv klasser och åldrar du undervisat, och ta med mentorskap, utvecklingsarbete eller digitala verktyg du använt i undervisningen.",
+    format:
+      "En till två sidor. Sätt behörighet överst, följt av erfarenhet i omvänd kronologisk ordning. Var konkret om ämnen och stadier.",
+  },
+  {
+    slug: "cv-exempel-projektledare",
+    yrke: "projektledare",
+    keyword: "cv exempel projektledare",
+    intro:
+      "Som projektledare bedöms du på vilka projekt du drivit, deras storlek och vilka resultat du nått. Arbetsgivaren letar efter någon som kan hålla ihop tid, budget och team.",
+    styrkor:
+      "Beskriv projekt du lett med konkreta siffror: budget, antal personer, tidsram och resultat. Nämn metoder du arbetat i, som agilt eller vattenfall, och verktyg du använt. Visa att du levererat i mål.",
+    format:
+      "En till två sidor. Sätt dina starkaste projekt och resultat överst. Låt siffror och utfall synas i varje uppdrag.",
+  },
+  {
+    slug: "cv-exempel-snickare",
+    yrke: "snickare",
+    keyword: "cv exempel snickare",
+    intro:
+      "Som snickare bedöms du på din yrkeserfarenhet, vilka typer av projekt du arbetat med och eventuella certifikat. Ett enkelt CV som visar vad du faktiskt byggt slår ett rörigt.",
+    styrkor:
+      "Beskriv vilka typer av arbeten du utfört, som nybyggnation, renovering eller stommontage. Ta med behörigheter och certifikat, som heta arbeten eller ställningsbygge, och nämn körkort om du har.",
+    format:
+      "En sida räcker oftast. Sätt yrkeserfarenhet och certifikat överst. Skriv konkret om vad du byggt och var, och ta med referenser om du kan.",
+  },
+  {
     slug: "cv-exempel-utan-erfarenhet",
     yrke: "dig utan tidigare erfarenhet",
     keyword: "cv utan erfarenhet",

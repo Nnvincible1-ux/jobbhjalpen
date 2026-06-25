@@ -4,7 +4,11 @@ type SEO = {
   title: string;
   description: string;
   path: string;
+  image?: string;
 };
+
+const DEFAULT_OG_IMAGE =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663127583745/3kK9fnugWmY8nf2tZKYFZE/og-guider-hM43gAj9eyRqdhCWURGRE2.webp";
 
 function setMeta(name: string, content: string, attr: "name" | "property" = "name") {
   let el = document.head.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
@@ -30,17 +34,21 @@ function setCanonical(href: string) {
  * Client-side SEO for SPA navigation. The server injects meta for the initial
  * load (crawlers); this keeps it correct as the user navigates.
  */
-export function useSEO({ title, description, path }: SEO) {
+export function useSEO({ title, description, path, image }: SEO) {
   useEffect(() => {
     document.title = title;
     setMeta("description", description);
     setMeta("og:title", title, "property");
     setMeta("og:description", description, "property");
     setMeta("og:type", "website", "property");
+    setMeta("og:image", image || DEFAULT_OG_IMAGE, "property");
+    setMeta("twitter:card", "summary_large_image");
+    setMeta("twitter:image", image || DEFAULT_OG_IMAGE);
     if (typeof window !== "undefined") {
+      setMeta("og:url", `${window.location.origin}${path}`, "property");
       setCanonical(`${window.location.origin}${path}`);
     }
-  }, [title, description, path]);
+  }, [title, description, path, image]);
 }
 
 /** Inject JSON-LD structured data (Article / FAQPage). */
