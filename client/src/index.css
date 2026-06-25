@@ -28,7 +28,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-display: "Newsreader", ui-serif, Georgia, serif;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 

@@ -15,6 +15,7 @@ import AdminPage from "./pages/AdminPage";
 import CoachPage from "./pages/CoachPage";
 import GuidesPage from "./pages/GuidesPage";
 import GuidePage from "./pages/GuidePage";
+import About from "./pages/About";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/resultat/:id" component={ResultPage} />
       <Route path="/guider" component={GuidesPage} />
       <Route path="/guider/:slug" component={GuidePage} />
+      <Route path="/om-oss" component={About} />
       <Route path="/integritet" component={Privacy} />
       <Route path="/coach" component={CoachPage} />
       <Route path="/admin" component={AdminPage} />

@@ -30,6 +30,9 @@ export function SiteHeader() {
           <Link href="/guider" className="text-muted-foreground transition-colors hover:text-foreground">
             Guider
           </Link>
+          <Link href="/om-oss" className="text-muted-foreground transition-colors hover:text-foreground">
+            Om oss
+          </Link>
           <a href="/#faq" className="text-muted-foreground transition-colors hover:text-foreground">
             Vanliga frågor
           </a>

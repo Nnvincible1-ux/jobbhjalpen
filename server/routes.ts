@@ -231,6 +231,7 @@ export function registerCustomRoutes(app: Express) {
     const urls = [
       "/",
       "/guider",
+      "/om-oss",
       "/integritet",
       ...services.map((s) => `/tjanst/${s.slug}`),
       ...guides.map((g) => `/guider/${g.slug}`),
