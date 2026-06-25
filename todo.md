@@ -85,3 +85,13 @@
 - [x] Guider-länk i navet
 - [x] Tester: guides list/get + draft-isolering (23/23 pass)
 - [~] Server-side meta-injektion per route: medveten framtida förbättring (kräver ändring i kärnfilen vite.ts; dokumenterad i SEO_STRATEGY.md). Client-side meta + JSON-LD + sitemap räcker för lansering.
+
+## AI-flöde, humanizer och VPS-drift
+- [x] Humanizer-modul (regler + deterministisk städning stripAiTells)
+- [x] Dubbelt AI-flöde: generering (GEN_MODEL) + humanisering (HUMANIZER_MODEL)
+- [x] Modeller via env (byts utan kodändring), LLM-lager leverantörsoberoende
+- [x] Humanizer obligatorisk i flödet + deterministisk slutstädning på all output
+- [x] Tester för humanizer (28/28 totalt) + end-to-end verifierat (0 tankstreck i output)
+- [x] VPS-deploypaket: ENV.sample.md, Caddyfile, nginx-conf, PM2, systemd, deploy.sh
+- [x] Svensk steg-för-steg-guide för Hostinger (deploy/GUIDE_HOSTINGER.md)
+- [x] docs/AI_OCH_DRIFT.md (modellval + humanizer + drift)

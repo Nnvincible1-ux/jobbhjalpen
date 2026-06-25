@@ -1,0 +1,23 @@
+# CV-piloten – Caddy-konfiguration
+# Caddy hämtar och förnyar HTTPS-certifikat automatiskt (Let's Encrypt).
+# Lägg den här filen i /etc/caddy/Caddyfile på din VPS och kör: sudo systemctl reload caddy
+
+cvpiloten.se, www.cvpiloten.se {
+	# Proxa all trafik till Node-processen (PORT i .env, standard 3000)
+	reverse_proxy 127.0.0.1:3000
+
+	encode gzip zstd
+
+	# Säkerhetsrubriker
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
+
+# Nordiska domäner: omdirigera till .se tills expansion (avkommentera när de pekar mot servern)
+# cvpiloten.com, cvpiloten.no, cvpiloten.dk {
+# 	redir https://cvpiloten.se{uri} permanent
+# }
