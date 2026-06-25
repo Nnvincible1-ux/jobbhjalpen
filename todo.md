@@ -84,4 +84,4 @@
 - [x] Dynamisk sitemap inkluderar alla guider
 - [x] Guider-länk i navet
 - [x] Tester: guides list/get + draft-isolering (23/23 pass)
-- [ ] (Valfritt senare) Server-side meta-injektion per route för maximal crawler-SEO
+- [~] Server-side meta-injektion per route: medveten framtida förbättring (kräver ändring i kärnfilen vite.ts; dokumenterad i SEO_STRATEGY.md). Client-side meta + JSON-LD + sitemap räcker för lansering.

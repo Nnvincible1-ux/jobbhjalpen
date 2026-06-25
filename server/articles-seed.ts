@@ -22,7 +22,7 @@ export const ARTICLES: ArticleSeed[] = [
     slug: "skriva-cv",
     kind: "pillar",
     title: "Skriva CV: så bygger du ett CV som ger intervju",
-    metaTitle: "Skriva CV 2026 – komplett guide som ger fler intervjuer",
+    metaTitle: "Skriva CV 2026: komplett guide som ger fler intervjuer",
     metaDescription:
       "Lär dig skriva ett CV som rekryterare faktiskt läser. Struktur, innehåll, vanliga misstag och en checklista. Få ditt CV granskat på minuter.",
     excerpt:
@@ -36,7 +36,7 @@ export const ARTICLES: ArticleSeed[] = [
       { q: "I vilken ordning ska jag lista erfarenhet?", a: "Omvänd kronologisk ordning, alltså senaste jobbet först. Det är vad rekryterare förväntar sig." },
     ]),
     sortOrder: 1,
-    body: `Ett CV har ett enda jobb: att få dig till intervju. Rekryteraren lägger ofta bara några sekunder på den första bedömningen, så allt handlar om att snabbt visa att du passar för tjänsten. Den här guiden går igenom hur du bygger ett CV som håller, oavsett om du söker ditt första jobb eller byter karriär.
+    body: `Ett CV har egentligen ett enda jobb. Det ska få dig till intervju. Rekryteraren hinner ofta bara titta några sekunder innan hen bildar sig en uppfattning, så det gäller att snabbt visa att du passar. Den här guiden går igenom hur du bygger ett CV som håller, oavsett om det är ditt första jobb eller ett karriärbyte.
 
 ## Börja med rätt struktur
 
@@ -46,7 +46,7 @@ Anledningen till att den här ordningen fungerar är enkel. Rekryteraren vill sn
 
 ## Skriv en profiltext som säger något
 
-Profiltexten är det första som läses, så lägg tid på den. Undvik tomma fraser som "driven lagspelare med god samarbetsförmåga". Skriv i stället konkret vad du gör och vad du har åstadkommit. En systemutvecklare kan skriva att hen byggt och driftat tjänster som hanterar tusentals användare. En säljare kan nämna att hen ökat försäljningen på sitt distrikt. Konkreta resultat övertygar, generella ord gör det inte.
+Profiltexten läses först, så den förtjänar lite extra tid. Hoppa över tomma fraser av typen "driven lagspelare med god samarbetsförmåga". Sådant kunde stå på vems CV som helst. Skriv i stället vad du faktiskt gör och vad du har åstadkommit. En utvecklare kan berätta att hen byggt tjänster som hanterar tusentals användare. En säljare kan nämna att hen ökade försäljningen på sitt distrikt med en tydlig siffra. Det konkreta fastnar, det generella glider förbi.
 
 ## Beskriv erfarenhet med resultat, inte bara uppgifter
 
@@ -58,7 +58,7 @@ Ett generellt CV som skickas till alla jobb presterar sämre än ett som är anp
 
 ## Undvik de vanligaste misstagen
 
-Stavfel och slarvig formatering signalerar bristande noggrannhet. Långa textstycken gör CV:t svårläst. Inaktuella eller irrelevanta uppgifter tar plats från det som spelar roll. Gå igenom ditt CV med kritiska ögon, eller låt någon annan läsa det, innan du skickar in det.
+Stavfel och slarvig formatering ger ett intryck av att du inte brydde dig, även om du gjorde det. Långa textstycken gör CV:t jobbigt att läsa, och gamla uppgifter som inte längre är relevanta tar plats från det som faktiskt spelar roll. Läs igenom med kritiska ögon, eller be någon annan läsa, innan du skickar.
 
 ## Checklista innan du skickar
 
@@ -70,7 +70,7 @@ När du vill ha en objektiv bedömning kan du låta CV-Granskaren gå igenom dit
     slug: "cv-mall",
     kind: "cluster",
     title: "CV-mall: välj rätt mall för din ansökan",
-    metaTitle: "CV-mall 2026 – så väljer du rätt mall för jobbet",
+    metaTitle: "CV-mall 2026: så väljer du rätt mall för jobbet",
     metaDescription:
       "Hitta rätt CV-mall för din bransch och erfarenhetsnivå. Så väljer du layout, format och struktur som passar tjänsten du söker.",
     excerpt:
@@ -105,7 +105,7 @@ En mall är en utgångspunkt, inte en tvångströja. Fyll den med konkret inneh�
     slug: "cv-exempel",
     kind: "cluster",
     title: "CV-exempel: så ser ett bra CV ut",
-    metaTitle: "CV-exempel 2026 – konkreta exempel som ger intervju",
+    metaTitle: "CV-exempel 2026: konkreta exempel som ger intervju",
     metaDescription:
       "Se hur ett bra CV ser ut med konkreta exempel på profiltext, erfarenhet och färdigheter. Lär dig vad som skiljer ett starkt CV från ett svagt.",
     excerpt:
@@ -140,7 +140,7 @@ ARTICLES.push(
     slug: "ats-cv",
     kind: "cluster",
     title: "ATS-CV: så klarar ditt CV de digitala filtren",
-    metaTitle: "ATS-CV – så skriver du ett CV som klarar rekryteringssystem",
+    metaTitle: "ATS-CV: så skriver du ett CV som klarar rekryteringssystem",
     metaDescription:
       "Många CV sorteras bort av rekryteringssystem innan en människa ser dem. Så optimerar du ditt CV för ATS utan att tappa läsbarhet.",
     excerpt:
@@ -177,7 +177,7 @@ När du laddar upp ditt CV och en jobbannons hos oss anpassar vi automatiskt dit
     slug: "kompetenser-cv",
     kind: "cluster",
     title: "Kompetenser på CV: vilka du ska ta med och hur",
-    metaTitle: "Kompetenser på CV – vilka du ska lyfta fram och hur",
+    metaTitle: "Kompetenser på CV: vilka du ska lyfta fram och hur",
     metaDescription:
       "Vilka kompetenser ska du ta med på CV:t och hur beskriver du dem så att de övertygar? Så väljer du rätt färdigheter för tjänsten.",
     excerpt:
@@ -211,7 +211,7 @@ Vill du veta om dina kompetenser kommer fram tydligt nog kan CV-Granskaren bedö
     slug: "personligt-brev",
     kind: "pillar",
     title: "Personligt brev: så skriver du ett brev som öppnar dörrar",
-    metaTitle: "Personligt brev 2026 – guide och struktur som fungerar",
+    metaTitle: "Personligt brev 2026: guide och struktur som fungerar",
     metaDescription:
       "Lär dig skriva ett personligt brev som kompletterar ditt CV och övertygar rekryteraren. Struktur, ton och exempel på vad som fungerar.",
     excerpt:
@@ -224,7 +224,7 @@ Vill du veta om dina kompetenser kommer fram tydligt nog kan CV-Granskaren bedö
       { q: "Ska jag skriva ett nytt brev för varje jobb?", a: "Ja, åtminstone anpassa det. Ett generellt brev märks och övertygar sällan." },
     ]),
     sortOrder: 6,
-    body: `Det personliga brevet är din chans att förklara varför just du passar för tjänsten, med dina egna ord. CV:t visar vad du gjort, brevet visar vem du är och varför du söker. Tillsammans bildar de en helhet. Här går vi igenom hur du skriver ett brev som faktiskt läses.
+    body: `Det personliga brevet är din chans att med egna ord förklara varför just du passar. CV:t visar vad du har gjort. Brevet visar vem du är och varför du söker den här rollen. Här går vi igenom hur du skriver ett brev som faktiskt blir läst och inte bara ögnat igenom.
 
 ## Fånga intresset i första stycket
 
@@ -236,7 +236,7 @@ Mitten av brevet ska binda ihop din bakgrund med kraven i annonsen. Välj ut ett
 
 ## Skriv i din egen röst
 
-Ett personligt brev får låta som du. Det betyder inte slarvigt, men gärna mänskligt och direkt. Undvik krångliga formuleringar och tomma fraser. Skriv som om du förklarade för en person varför du vill ha jobbet.
+Ett personligt brev får låta som du. Det betyder inte slarvigt, men gärna mänskligt och rakt på. Krångliga formuleringar och tomma fraser gör mer skada än nytta. Skriv ungefär som om du satt mittemot rekryteraren och förklarade varför du vill ha jobbet.
 
 ## Avsluta med ett tydligt nästa steg
 
@@ -250,7 +250,7 @@ Ett brev som skickas oförändrat till flera jobb märks direkt. Lägg den extra
     slug: "personligt-brev-exempel",
     kind: "cluster",
     title: "Personligt brev exempel: formuleringar som fungerar",
-    metaTitle: "Personligt brev exempel – formuleringar som övertygar",
+    metaTitle: "Personligt brev exempel: formuleringar som övertygar",
     metaDescription:
       "Konkreta exempel på hur du formulerar inledning, mitt och avslutning i ett personligt brev. Se vad som fungerar och vad du bör undvika.",
     excerpt:
@@ -282,7 +282,7 @@ Ett bra brev hänger ihop från inledning till avslutning och pekar hela tiden m
     slug: "intervjufragor",
     kind: "pillar",
     title: "Intervjufrågor: vanliga frågor och hur du svarar",
-    metaTitle: "Vanliga intervjufrågor 2026 – och hur du svarar bra",
+    metaTitle: "Vanliga intervjufrågor 2026: och hur du svarar bra",
     metaDescription:
       "De vanligaste intervjufrågorna och hur du svarar på dem så att du sticker ut. Förbered dig med konkreta strategier inför nästa intervju.",
     excerpt:
@@ -295,7 +295,7 @@ Ett bra brev hänger ihop från inledning till avslutning och pekar hela tiden m
       { q: "Vad svarar jag på frågan om mina svagheter?", a: "Välj en verklig svaghet och beskriv hur du arbetar med den. Det visar självinsikt utan att skada din kandidatur." },
     ]),
     sortOrder: 8,
-    body: `Intervjun är ofta det sista steget mellan dig och jobbet, och det är här många avgörs. Det som skiljer en trygg kandidat från en nervös är sällan talang, utan förberedelse. När du känner igen frågorna och har dina exempel klara blir samtalet mycket lättare.
+    body: `Intervjun är ofta det sista som står mellan dig och jobbet. Det som skiljer en trygg kandidat från en nervös är sällan talang. Det är förberedelse. När du känner igen frågorna och redan har dina exempel klara blir samtalet mycket lättare att ta sig igenom.
 
 ## Berätta om dig själv
 
