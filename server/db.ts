@@ -8,6 +8,7 @@ import {
   InsertParticipant,
   InsertServiceSession,
   InsertUser,
+  articles,
   memberships,
   participants,
   subscriptions,
@@ -194,6 +195,31 @@ export async function getServiceBySlug(slug: string) {
   if (!db) return undefined;
   const rows = await db.select().from(services).where(eq(services.slug, slug)).limit(1);
   return rows.length > 0 ? rows[0] : undefined;
+}
+
+/* ------------------------------- Articles ------------------------------- */
+
+export async function listArticles(includeDrafts: boolean) {
+  const db = await getDb();
+  if (!db) return [];
+  if (includeDrafts) return db.select().from(articles).orderBy(asc(articles.sortOrder));
+  return db.select().from(articles).where(eq(articles.isDraft, false)).orderBy(asc(articles.sortOrder));
+}
+
+export async function getArticleBySlug(slug: string, includeDrafts: boolean) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
+  const a = rows[0];
+  if (!a) return undefined;
+  if (a.isDraft && !includeDrafts) return undefined;
+  return a;
+}
+
+export async function updateArticle(slug: string, patch: Partial<typeof articles.$inferInsert>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(articles).set(patch).where(eq(articles.slug, slug));
 }
 
 /* --------------------------------- CMS ---------------------------------- */

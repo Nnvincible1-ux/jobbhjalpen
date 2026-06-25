@@ -27,6 +27,9 @@ export function SiteHeader() {
           <a href="/#sa-funkar-det" className="text-muted-foreground transition-colors hover:text-foreground">
             Så funkar det
           </a>
+          <Link href="/guider" className="text-muted-foreground transition-colors hover:text-foreground">
+            Guider
+          </Link>
           <a href="/#faq" className="text-muted-foreground transition-colors hover:text-foreground">
             Vanliga frågor
           </a>

@@ -3,8 +3,9 @@
  * Runs once at server startup; never overwrites edited rows.
  */
 import { getDb } from "./db";
-import { cmsContent, cmsFaq, cmsStyles, services } from "../drizzle/schema";
+import { articles, cmsContent, cmsFaq, cmsStyles, services } from "../drizzle/schema";
 import { sql } from "drizzle-orm";
+import { ARTICLES } from "./articles-seed";
 
 type ServiceSeed = {
   slug: string;
@@ -115,6 +116,28 @@ export async function seedDefaults(): Promise<void> {
         .insert(cmsStyles)
         .values({ styleKey: st.key, value: st.value, defaultValue: st.value, label: st.label, cssVar: st.cssVar, category: st.category, inputType: st.inputType, sortOrder: st.sort, isDraft: false })
         .onDuplicateKeyUpdate({ set: { styleKey: sql`styleKey` } });
+    }
+
+    for (const a of ARTICLES) {
+      await db
+        .insert(articles)
+        .values({
+          slug: a.slug,
+          kind: a.kind,
+          title: a.title,
+          metaTitle: a.metaTitle,
+          metaDescription: a.metaDescription,
+          excerpt: a.excerpt,
+          body: a.body,
+          keyword: a.keyword,
+          relatedSlugs: a.relatedSlugs,
+          ctaServiceSlug: a.ctaServiceSlug,
+          faqJson: a.faqJson,
+          sortOrder: a.sortOrder,
+          isDraft: false,
+          publishedAt: new Date(),
+        })
+        .onDuplicateKeyUpdate({ set: { slug: sql`slug` } });
     }
 
     seeded = true;

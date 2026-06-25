@@ -13,6 +13,8 @@ import ResultPage from "./pages/ResultPage";
 import Privacy from "./pages/Privacy";
 import AdminPage from "./pages/AdminPage";
 import CoachPage from "./pages/CoachPage";
+import GuidesPage from "./pages/GuidesPage";
+import GuidePage from "./pages/GuidePage";
 
 function Router() {
   return (
@@ -20,6 +22,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/tjanst/:slug" component={ServicePage} />
       <Route path="/resultat/:id" component={ResultPage} />
+      <Route path="/guider" component={GuidesPage} />
+      <Route path="/guider/:slug" component={GuidePage} />
       <Route path="/integritet" component={Privacy} />
       <Route path="/coach" component={CoachPage} />
       <Route path="/admin" component={AdminPage} />

@@ -212,3 +212,29 @@ export const subscriptions = mysqlTable("subscriptions", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type Subscription = typeof subscriptions.$inferSelect;
+
+/**
+ * SEO articles / guides (pillar + cluster). CMS-editable, draft/publish.
+ * Public site reads published; body is Markdown.
+ */
+export const articles = mysqlTable("articles", {
+  id: int("id").autoincrement().primaryKey(),
+  slug: varchar("slug", { length: 160 }).notNull().unique(),
+  kind: mysqlEnum("kind", ["pillar", "cluster"]).default("cluster").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  metaTitle: varchar("metaTitle", { length: 255 }).notNull(),
+  metaDescription: varchar("metaDescription", { length: 320 }).notNull(),
+  excerpt: varchar("excerpt", { length: 512 }).notNull(),
+  body: text("body").notNull(),
+  keyword: varchar("keyword", { length: 160 }).notNull(),
+  relatedSlugs: varchar("relatedSlugs", { length: 512 }),
+  ctaServiceSlug: varchar("ctaServiceSlug", { length: 64 }),
+  faqJson: text("faqJson"),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isDraft: boolean("isDraft").default(false).notNull(),
+  publishedAt: timestamp("publishedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Article = typeof articles.$inferSelect;
+export type InsertArticle = typeof articles.$inferInsert;

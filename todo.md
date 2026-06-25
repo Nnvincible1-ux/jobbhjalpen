@@ -71,5 +71,17 @@
 - [x] Handledare kan skapa membership (coach.addCoach, org_admin/plattformsadmin)
 - [x] "Starta tjänst" i portalen: org-kontext-uppladdning -> org-betald session -> resultat
 - [x] Org-faktureringsmodell + visning (subscriptions) klar; org-sessioner bär coachUserId
-- [ ] Skarp Stripe Billing-prenumeration (aktiveras när Stripe-nycklar finns; konsument-Stripe likadant vilande)
+- [~] Skarp Stripe Billing-prenumeration: medvetet uppskjuten i POC, aktiveras när du levererar Stripe-nycklar (samma som konsument-Stripe). Datamodell + visning klar.
 - [x] README uppdaterad med white-label/SaaS-arkitektur
+
+## SEO-innehåll (ranka mot cvkungen i Sverige)
+- [x] SEO-strategi: pillar + kluster + sökordskarta (docs/SEO_STRATEGY.md)
+- [x] articles-tabell (slug, kind, meta, body, keyword, related, cta, faq) draft/publish
+- [x] 3 pillar + 5 kluster svenska SEO-artiklar seedade (köpstark, människolik text)
+- [x] Bloggmotor: /guider listsida + /guider/:slug artikelsida
+- [x] On-page-SEO: useSEO (title/description/canonical) + JSON-LD Article/FAQPage
+- [x] Intern länkning pillar<->kluster + CTA till 49 kr-tjänst
+- [x] Dynamisk sitemap inkluderar alla guider
+- [x] Guider-länk i navet
+- [x] Tester: guides list/get + draft-isolering (23/23 pass)
+- [ ] (Valfritt senare) Server-side meta-injektion per route för maximal crawler-SEO

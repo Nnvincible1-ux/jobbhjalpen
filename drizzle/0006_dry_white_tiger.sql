@@ -1,0 +1,21 @@
+CREATE TABLE `articles` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`slug` varchar(160) NOT NULL,
+	`kind` enum('pillar','cluster') NOT NULL DEFAULT 'cluster',
+	`title` varchar(255) NOT NULL,
+	`metaTitle` varchar(255) NOT NULL,
+	`metaDescription` varchar(320) NOT NULL,
+	`excerpt` varchar(512) NOT NULL,
+	`body` text NOT NULL,
+	`keyword` varchar(160) NOT NULL,
+	`relatedSlugs` varchar(512),
+	`ctaServiceSlug` varchar(64),
+	`faqJson` text,
+	`sortOrder` int NOT NULL DEFAULT 0,
+	`isDraft` boolean NOT NULL DEFAULT false,
+	`publishedAt` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `articles_id` PRIMARY KEY(`id`),
+	CONSTRAINT `articles_slug_unique` UNIQUE(`slug`)
+);

@@ -6,6 +6,7 @@ import {
   getServiceBySlug,
   getSession,
   getSessionByStripeId,
+  listArticles,
   listServices,
   markSessionPaid,
   updateSession,
@@ -226,7 +227,14 @@ export function registerCustomRoutes(app: Express) {
   app.get("/sitemap.xml", async (_req: Request, res: Response) => {
     const base = process.env.PUBLIC_BASE_URL || "https://jobbhjalpen.manus.space";
     const services = await listServices();
-    const urls = ["/", "/integritet", ...services.map((s) => `/tjanst/${s.slug}`)];
+    const guides = await listArticles(false);
+    const urls = [
+      "/",
+      "/guider",
+      "/integritet",
+      ...services.map((s) => `/tjanst/${s.slug}`),
+      ...guides.map((g) => `/guider/${g.slug}`),
+    ];
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
       .map((u) => `  <url><loc>${base}${u}</loc></url>`)
       .join("\n")}\n</urlset>`;

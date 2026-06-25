@@ -17,9 +17,11 @@ import {
   getParticipant,
   addMembership,
   createSession,
+  getArticleBySlug,
   getServiceBySlug,
   getSession,
   getSubscription,
+  listArticles,
   getTenantById,
   getUserByOpenId,
   listParticipants,
@@ -68,6 +70,15 @@ export const appRouter = router({
     get: publicProcedure
       .input(z.object({ slug: z.string() }))
       .query(({ input }) => getServiceBySlug(input.slug)),
+  }),
+
+  guides: router({
+    list: publicProcedure
+      .input(z.object({ preview: z.boolean().optional() }).optional())
+      .query(({ input }) => listArticles(input?.preview === true)),
+    get: publicProcedure
+      .input(z.object({ slug: z.string(), preview: z.boolean().optional() }))
+      .query(({ input }) => getArticleBySlug(input.slug, input.preview === true)),
   }),
 
   /* ------------------------------ Session ------------------------------- */
