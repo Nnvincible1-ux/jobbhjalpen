@@ -37,8 +37,12 @@ export function registerCustomRoutes(app: Express) {
       let event;
       try {
         if (whSecret && sig) {
+          // Production path: verify the signature so only real Stripe events pass.
           event = stripe.webhooks.constructEvent(req.body, sig, whSecret);
         } else {
+          // No webhook secret configured. Acceptable only for local testing.
+          // In production ALWAYS set STRIPE_WEBHOOK_SECRET.
+          console.warn("[stripe webhook] STRIPE_WEBHOOK_SECRET saknas, signaturen verifieras inte. Sätt den i produktion.");
           event = JSON.parse(req.body.toString());
         }
       } catch (err) {

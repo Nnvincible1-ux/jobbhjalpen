@@ -129,7 +129,7 @@ Peka cvpiloten.se mot VPS:ns IP via en A-post hos din DNS. Sätt upp Nginx eller
 
 ### Stripe-webhooks
 
-Webhooken behöver en fast, publik adress, vilket en VPS ger dig. Peka Stripe-webhooken till `https://cvpiloten.se/api/service/stripe-webhook` och lägg in webhook-hemligheten i miljön. Då låses en tjänst upp först när Stripe bekräftar betalningen, precis som kravet säger.
+Webhooken behöver en fast, publik adress, vilket en VPS ger dig. Peka Stripe-webhooken till `https://cvpiloten.se/api/stripe/webhook` (lyssna på `checkout.session.completed`) och lägg in webhook-hemligheten i miljön. Då låses en tjänst upp först när Stripe bekräftar betalningen, precis som kravet säger.
 
 ## Sammanfattning
 

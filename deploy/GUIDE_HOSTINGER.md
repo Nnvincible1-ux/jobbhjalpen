@@ -79,7 +79,7 @@ Caddy hämtar automatiskt ett giltigt HTTPS-certifikat. Öppna https://cvpiloten
 
 ## Steg 9: Aktivera Stripe-betalning
 
-I Stripe-panelen, skapa en webhook som pekar på `https://cvpiloten.se/api/service/stripe-webhook`. Kopiera webhook-hemligheten och din API-nyckel in i `.env`, kör sedan `bash deploy/deploy.sh` så att appen läser de nya värdena. Från och med nu låses en tjänst upp först när Stripe bekräftar betalningen.
+I Stripe-panelen, skapa en webhook som pekar på `https://cvpiloten.se/api/stripe/webhook` och lyssnar på händelsen `checkout.session.completed`. Kopiera webhook-hemligheten (börjar med `whsec_`) och din API-nyckel (`sk_live_...`) in i `.env`, kör sedan `bash deploy/deploy.sh` så att appen läser de nya värdena. Från och med nu låses en tjänst upp först när Stripe bekräftar betalningen.
 
 ## Uppdatera sajten i framtiden
 
