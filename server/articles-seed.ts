@@ -22,7 +22,7 @@ export const ARTICLES: ArticleSeed[] = [
     slug: "skriva-cv",
     kind: "pillar",
     title: "Skriva CV: så bygger du ett CV som ger intervju",
-    metaTitle: "Skriva CV 2026: komplett guide som ger fler intervjuer",
+    metaTitle: "Skriva CV 2026 – komplett guide som ger fler intervjuer",
     metaDescription:
       "Lär dig skriva ett CV som rekryterare faktiskt läser. Struktur, innehåll, vanliga misstag och en checklista. Få ditt CV granskat på minuter.",
     excerpt:
@@ -70,7 +70,7 @@ När du vill ha en objektiv bedömning kan du låta CV-Granskaren gå igenom dit
     slug: "cv-mall",
     kind: "cluster",
     title: "CV-mall: välj rätt mall för din ansökan",
-    metaTitle: "CV-mall 2026: så väljer du rätt mall för jobbet",
+    metaTitle: "CV-mall 2026 – så väljer du rätt mall för jobbet",
     metaDescription:
       "Hitta rätt CV-mall för din bransch och erfarenhetsnivå. Så väljer du layout, format och struktur som passar tjänsten du söker.",
     excerpt:
@@ -105,7 +105,7 @@ En mall är en utgångspunkt, inte en tvångströja. Fyll den med konkret inneh�
     slug: "cv-exempel",
     kind: "cluster",
     title: "CV-exempel: så ser ett bra CV ut",
-    metaTitle: "CV-exempel 2026: konkreta exempel som ger intervju",
+    metaTitle: "CV-exempel 2026 – konkreta exempel som ger intervju",
     metaDescription:
       "Se hur ett bra CV ser ut med konkreta exempel på profiltext, erfarenhet och färdigheter. Lär dig vad som skiljer ett starkt CV från ett svagt.",
     excerpt:
@@ -140,7 +140,7 @@ ARTICLES.push(
     slug: "ats-cv",
     kind: "cluster",
     title: "ATS-CV: så klarar ditt CV de digitala filtren",
-    metaTitle: "ATS-CV: så skriver du ett CV som klarar rekryteringssystem",
+    metaTitle: "ATS-CV – så skriver du ett CV som klarar rekryteringssystem",
     metaDescription:
       "Många CV sorteras bort av rekryteringssystem innan en människa ser dem. Så optimerar du ditt CV för ATS utan att tappa läsbarhet.",
     excerpt:
@@ -177,7 +177,7 @@ När du laddar upp ditt CV och en jobbannons hos oss anpassar vi automatiskt dit
     slug: "kompetenser-cv",
     kind: "cluster",
     title: "Kompetenser på CV: vilka du ska ta med och hur",
-    metaTitle: "Kompetenser på CV: vilka du ska lyfta fram och hur",
+    metaTitle: "Kompetenser på CV – vilka du ska lyfta fram och hur",
     metaDescription:
       "Vilka kompetenser ska du ta med på CV:t och hur beskriver du dem så att de övertygar? Så väljer du rätt färdigheter för tjänsten.",
     excerpt:
@@ -211,7 +211,7 @@ Vill du veta om dina kompetenser kommer fram tydligt nog kan CV-Granskaren bedö
     slug: "personligt-brev",
     kind: "pillar",
     title: "Personligt brev: så skriver du ett brev som öppnar dörrar",
-    metaTitle: "Personligt brev 2026: guide och struktur som fungerar",
+    metaTitle: "Personligt brev 2026 – guide och struktur som fungerar",
     metaDescription:
       "Lär dig skriva ett personligt brev som kompletterar ditt CV och övertygar rekryteraren. Struktur, ton och exempel på vad som fungerar.",
     excerpt:
@@ -250,7 +250,7 @@ Ett brev som skickas oförändrat till flera jobb märks direkt. Lägg den extra
     slug: "personligt-brev-exempel",
     kind: "cluster",
     title: "Personligt brev exempel: formuleringar som fungerar",
-    metaTitle: "Personligt brev exempel: formuleringar som övertygar",
+    metaTitle: "Personligt brev exempel – formuleringar som övertygar",
     metaDescription:
       "Konkreta exempel på hur du formulerar inledning, mitt och avslutning i ett personligt brev. Se vad som fungerar och vad du bör undvika.",
     excerpt:
@@ -282,7 +282,7 @@ Ett bra brev hänger ihop från inledning till avslutning och pekar hela tiden m
     slug: "intervjufragor",
     kind: "pillar",
     title: "Intervjufrågor: vanliga frågor och hur du svarar",
-    metaTitle: "Vanliga intervjufrågor 2026: och hur du svarar bra",
+    metaTitle: "Vanliga intervjufrågor 2026 – och hur du svarar bra",
     metaDescription:
       "De vanligaste intervjufrågorna och hur du svarar på dem så att du sticker ut. Förbered dig med konkreta strategier inför nästa intervju.",
     excerpt:
