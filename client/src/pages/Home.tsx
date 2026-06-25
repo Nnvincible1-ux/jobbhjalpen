@@ -10,10 +10,17 @@ import { trpc } from "@/lib/trpc";
 import { useCms } from "@/contexts/CmsContext";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { CATEGORY_LABEL, SERVICE_ICON } from "@/lib/services";
+import { useSEO } from "@/lib/seo";
 
 export default function Home() {
   const { getText, faq } = useCms();
   const { data: services } = trpc.services.list.useQuery();
+  useSEO({
+    title: "Jobbhjälpen – CV, personligt brev och intervjuhjälp",
+    description:
+      "Jobbhjälpen hjälper dig skriva CV, personligt brev och förbereda intervju. Genomarbetat resultat på minuter, fast pris 49 kr per tjänst.",
+    path: "/",
+  });
 
   const jobServices = services ?? [];
 

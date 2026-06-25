@@ -6,6 +6,7 @@ import { getDb } from "./db";
 import { articles, cmsContent, cmsFaq, cmsStyles, services } from "../drizzle/schema";
 import { sql } from "drizzle-orm";
 import { ARTICLES } from "./articles-seed";
+import { YRKES_ARTICLES } from "./articles-yrken-seed";
 
 type ServiceSeed = {
   slug: string;
@@ -107,7 +108,7 @@ export async function seedDefaults(): Promise<void> {
         .onDuplicateKeyUpdate({ set: { styleKey: sql`styleKey` } });
     }
 
-    for (const a of ARTICLES) {
+    for (const a of [...ARTICLES, ...YRKES_ARTICLES]) {
       await db
         .insert(articles)
         .values({
