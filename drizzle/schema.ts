@@ -227,6 +227,7 @@ export const articles = mysqlTable("articles", {
   excerpt: varchar("excerpt", { length: 512 }).notNull(),
   body: text("body").notNull(),
   keyword: varchar("keyword", { length: 160 }).notNull(),
+  answerBlock: text("answerBlock"),
   relatedSlugs: varchar("relatedSlugs", { length: 512 }),
   ctaServiceSlug: varchar("ctaServiceSlug", { length: 64 }),
   faqJson: text("faqJson"),

@@ -7,6 +7,7 @@ import { articles, cmsContent, cmsFaq, cmsStyles, services } from "../drizzle/sc
 import { sql } from "drizzle-orm";
 import { ARTICLES } from "./articles-seed";
 import { YRKES_ARTICLES } from "./articles-yrken-seed";
+import { YRKES2_ARTICLES } from "./articles-yrken2-seed";
 
 type ServiceSeed = {
   slug: string;
@@ -130,7 +131,12 @@ export async function seedDefaults(): Promise<void> {
         .onDuplicateKeyUpdate({ set: { styleKey: sql`styleKey` } });
     }
 
-    for (const a of [...ARTICLES, ...YRKES_ARTICLES]) {
+    const allArticles: (typeof ARTICLES[number] & { answerBlock?: string })[] = [
+      ...ARTICLES,
+      ...YRKES_ARTICLES,
+      ...YRKES2_ARTICLES,
+    ];
+    for (const a of allArticles) {
       await db
         .insert(articles)
         .values({
@@ -142,14 +148,16 @@ export async function seedDefaults(): Promise<void> {
           excerpt: a.excerpt,
           body: a.body,
           keyword: a.keyword,
+          answerBlock: a.answerBlock ?? null,
           relatedSlugs: a.relatedSlugs,
           ctaServiceSlug: a.ctaServiceSlug,
-          faqJson: a.faqJson,
+          faqJson: a.faqJson || null,
           sortOrder: a.sortOrder,
           isDraft: false,
           publishedAt: new Date(),
         })
-        .onDuplicateKeyUpdate({ set: { slug: sql`slug` } });
+        // Backfill answerBlock on existing rows (idempotent for the rest).
+        .onDuplicateKeyUpdate({ set: { answerBlock: a.answerBlock ?? null } });
     }
 
     seeded = true;

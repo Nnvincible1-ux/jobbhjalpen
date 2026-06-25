@@ -223,9 +223,30 @@ export function registerCustomRoutes(app: Express) {
 
   app.use("/api/service", router);
 
+  // ---- llms.txt for AI engines (GEO) ----
+  app.get("/llms.txt", async (_req: Request, res: Response) => {
+    const base = process.env.PUBLIC_BASE_URL || "https://cvpiloten.se";
+    const guides = await listArticles(false);
+    const services = await listServices();
+    const lines: string[] = [];
+    lines.push("# CV-piloten");
+    lines.push("> CV-piloten hjälper människor i Sverige skriva CV, personligt brev och förbereda intervju. Genomarbetat resultat på minuter, fast pris 49 kr per tjänst.");
+    lines.push("");
+    lines.push("## Tjänster");
+    for (const s of services) lines.push(`- [${s.slug}](${base}/tjanst/${s.slug})`);
+    lines.push("");
+    lines.push("## Guider");
+    for (const g of guides) lines.push(`- [${g.title}](${base}/guider/${g.slug}): ${g.metaDescription}`);
+    lines.push("");
+    lines.push("## Fakta");
+    lines.push("- Alla tjänster kostar 49 kr som engångsköp, utan abonnemang.");
+    lines.push("- Tjänsterna fokuserar på jobbsök: CV, personligt brev, LinkedIn och intervju.");
+    res.set("Content-Type", "text/plain; charset=utf-8").send(lines.join("\n"));
+  });
+
   // ---- Dynamic sitemap ----
   app.get("/sitemap.xml", async (_req: Request, res: Response) => {
-    const base = process.env.PUBLIC_BASE_URL || "https://jobbhjalpen.manus.space";
+    const base = process.env.PUBLIC_BASE_URL || "https://cvpiloten.se";
     const services = await listServices();
     const guides = await listArticles(false);
     const urls = [

@@ -50,6 +50,13 @@
       "when": 1782392649214,
       "tag": "0006_dry_white_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1782416976615,
+      "tag": "0007_tearful_dreadnoughts",
+      "breakpoints": true
     }
   ]
 }

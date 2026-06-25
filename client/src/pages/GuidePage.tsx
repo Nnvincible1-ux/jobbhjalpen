@@ -50,7 +50,7 @@ export default function GuidePage() {
           "@context": "https://schema.org",
           "@type": "Article",
           headline: article.title,
-          description: article.metaDescription,
+          description: article.answerBlock || article.metaDescription,
           inLanguage: "sv-SE",
           author: { "@type": "Organization", name: "CV-piloten" },
         }
@@ -101,6 +101,11 @@ export default function GuidePage() {
 
         <div className="mx-auto mt-8 max-w-3xl">
           <h1 className="font-display text-3xl font-semibold leading-tight md:text-4xl">{article.title}</h1>
+          {article.answerBlock && (
+            <div className="mt-6 rounded-xl border-l-4 bg-secondary/40 p-5" style={{ borderColor: "var(--brand-accent)" }}>
+              <p className="text-base leading-relaxed">{article.answerBlock}</p>
+            </div>
+          )}
           <div className="prose prose-neutral mt-8 max-w-none prose-headings:font-display prose-h2:mt-10 prose-a:text-foreground">
             <Streamdown>{article.body}</Streamdown>
           </div>

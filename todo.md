@@ -95,3 +95,15 @@
 - [x] VPS-deploypaket: ENV.sample.md, Caddyfile, nginx-conf, PM2, systemd, deploy.sh
 - [x] Svensk steg-för-steg-guide för Hostinger (deploy/GUIDE_HOSTINGER.md)
 - [x] docs/AI_OCH_DRIFT.md (modellval + humanizer + drift)
+
+## Content-skalning + AEO/GEO (enligt SEO-skill)
+- [x] Läste SEO/GEO/AEO-skills i ultimate-website-skill
+- [x] Genererade 30 nya yrkesguider parallellt (AEO-optimerade)
+- [x] answerBlock-kolumn + citatvänligt sammanfattningsblock per guide
+- [x] 41 guider live totalt (32 yrkesguider, 4 pillar)
+- [x] robots.txt släpper in AI-crawlers (GPTBot, ClaudeBot, PerplexityBot m.fl.)
+- [x] Dynamisk llms.txt med tjänster, guider och fakta
+- [x] Organization + WebSite JSON-LD i index.html
+- [x] Article-schema använder answerBlock som description
+- [x] sitemap inkluderar alla 49 URL:er, bas cvpiloten.se
+- [x] 28/28 tester passerar
