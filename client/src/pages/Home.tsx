@@ -91,7 +91,9 @@ export default function Home() {
         {[
           { label: CATEGORY_LABEL.job, items: jobServices },
           { label: CATEGORY_LABEL.private, items: privateServices },
-        ].map((group) => (
+        ]
+          .filter((group) => group.items.length > 0)
+          .map((group) => (
           <div key={group.label} className="mt-10">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               {group.label}

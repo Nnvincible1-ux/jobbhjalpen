@@ -15,6 +15,7 @@ type ServiceSeed = {
   maxRounds: number;
   acceptsAnnons: boolean;
   sortOrder: number;
+  active?: boolean;
 };
 
 const SERVICES: ServiceSeed[] = [
@@ -22,9 +23,10 @@ const SERVICES: ServiceSeed[] = [
   { slug: "linkedin-makeover", category: "job", promptKey: "linkedin_makeover", hasAdjustments: true, maxRounds: 3, acceptsAnnons: false, sortOrder: 2 },
   { slug: "cv-granskning", category: "job", promptKey: "cv_granskning", hasAdjustments: true, maxRounds: 3, acceptsAnnons: false, sortOrder: 3 },
   { slug: "intervju", category: "job", promptKey: "intervju", hasAdjustments: false, maxRounds: 0, acceptsAnnons: true, sortOrder: 4 },
-  { slug: "brf-analys", category: "private", promptKey: "brf_analys", hasAdjustments: false, maxRounds: 0, acceptsAnnons: false, sortOrder: 5 },
-  { slug: "avtal-granskning", category: "private", promptKey: "avtal_granskning", hasAdjustments: false, maxRounds: 0, acceptsAnnons: false, sortOrder: 6 },
-  { slug: "overklagande", category: "private", promptKey: "overklagande", hasAdjustments: false, maxRounds: 0, acceptsAnnons: false, sortOrder: 7 },
+  // Privatlivstjänster är tillfälligt parkerade (eget repo: mikroappar-privatliv). active=false.
+  { slug: "brf-analys", category: "private", promptKey: "brf_analys", hasAdjustments: false, maxRounds: 0, acceptsAnnons: false, sortOrder: 5, active: false },
+  { slug: "avtal-granskning", category: "private", promptKey: "avtal_granskning", hasAdjustments: false, maxRounds: 0, acceptsAnnons: false, sortOrder: 6, active: false },
+  { slug: "overklagande", category: "private", promptKey: "overklagande", hasAdjustments: false, maxRounds: 0, acceptsAnnons: false, sortOrder: 7, active: false },
 ];
 
 // textKey -> [label, defaultContent, category]
@@ -63,7 +65,7 @@ const TEXTS: [string, string, string, string][] = [
   ["service.overklagande.title", "Överklagande titel", "Överklagande-assistenten", "service"],
   ["service.overklagande.tagline", "Överklagande kort", "Ett sakligt, korrekt formulerat överklagande.", "service"],
   ["service.overklagande.desc", "Överklagande beskrivning", "Beskriv ärendet och ladda upp beslutet. Du får ett formellt överklagande med ett tydligt yrkande och en motivering, redo att signera.", "service"],
-  ["footer.tagline", "Footer text", "Dokumenttjänster för jobbsök och privatliv.", "footer"],
+  ["footer.tagline", "Footer text", "Dokumenttjänster som hjälper dig vidare i jobbsöket.", "footer"],
 ];
 
 const FAQS: [string, string, number][] = [
@@ -92,7 +94,7 @@ export async function seedDefaults(): Promise<void> {
     for (const s of SERVICES) {
       await db
         .insert(services)
-        .values({ slug: s.slug, category: s.category, priceSek: 49, promptKey: s.promptKey, hasAdjustments: s.hasAdjustments, maxRounds: s.maxRounds, acceptsAnnons: s.acceptsAnnons, sortOrder: s.sortOrder })
+        .values({ slug: s.slug, category: s.category, priceSek: 49, promptKey: s.promptKey, hasAdjustments: s.hasAdjustments, maxRounds: s.maxRounds, acceptsAnnons: s.acceptsAnnons, sortOrder: s.sortOrder, active: s.active ?? true })
         .onDuplicateKeyUpdate({ set: { slug: sql`slug` } }); // no-op = INSERT IGNORE
     }
 
