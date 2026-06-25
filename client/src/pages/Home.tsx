@@ -15,8 +15,7 @@ export default function Home() {
   const { getText, faq } = useCms();
   const { data: services } = trpc.services.list.useQuery();
 
-  const jobServices = (services ?? []).filter((s) => s.category === "job");
-  const privateServices = (services ?? []).filter((s) => s.category === "private");
+  const jobServices = services ?? [];
 
   return (
     <div className="min-h-screen">
@@ -88,16 +87,8 @@ export default function Home() {
           </p>
         </div>
 
-        {[
-          { label: CATEGORY_LABEL.job, items: jobServices },
-          { label: CATEGORY_LABEL.private, items: privateServices },
-        ]
-          .filter((group) => group.items.length > 0)
-          .map((group) => (
+        {[{ label: CATEGORY_LABEL.job, items: jobServices }].map((group) => (
           <div key={group.label} className="mt-10">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              {group.label}
-            </h3>
             <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {group.items.map((s) => {
                 const Icon = SERVICE_ICON[s.slug] ?? Sparkles;

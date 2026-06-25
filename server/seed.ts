@@ -23,10 +23,7 @@ const SERVICES: ServiceSeed[] = [
   { slug: "linkedin-makeover", category: "job", promptKey: "linkedin_makeover", hasAdjustments: true, maxRounds: 3, acceptsAnnons: false, sortOrder: 2 },
   { slug: "cv-granskning", category: "job", promptKey: "cv_granskning", hasAdjustments: true, maxRounds: 3, acceptsAnnons: false, sortOrder: 3 },
   { slug: "intervju", category: "job", promptKey: "intervju", hasAdjustments: false, maxRounds: 0, acceptsAnnons: true, sortOrder: 4 },
-  // Privatlivstjänster är tillfälligt parkerade (eget repo: mikroappar-privatliv). active=false.
-  { slug: "brf-analys", category: "private", promptKey: "brf_analys", hasAdjustments: false, maxRounds: 0, acceptsAnnons: false, sortOrder: 5, active: false },
-  { slug: "avtal-granskning", category: "private", promptKey: "avtal_granskning", hasAdjustments: false, maxRounds: 0, acceptsAnnons: false, sortOrder: 6, active: false },
-  { slug: "overklagande", category: "private", promptKey: "overklagande", hasAdjustments: false, maxRounds: 0, acceptsAnnons: false, sortOrder: 7, active: false },
+  // Privatlivstjänster är flyttade till ett separat repo: mikroappar-privatliv.
 ];
 
 // textKey -> [label, defaultContent, category]
@@ -55,16 +52,6 @@ const TEXTS: [string, string, string, string][] = [
   ["service.intervju.title", "Intervju titel", "Intervjusimulatorn", "service"],
   ["service.intervju.tagline", "Intervju kort", "De tio mest sannolika frågorna, med svarsstrategier.", "service"],
   ["service.intervju.desc", "Intervju beskrivning", "Utifrån ditt CV och tjänsten du söker får du de frågor som troligen kommer, hur du kan svara på dem och några frågor du själv kan ställa.", "service"],
-  // Private services
-  ["service.brf-analys.title", "BRF titel", "BRF-Granskaren", "service"],
-  ["service.brf-analys.tagline", "BRF kort", "Förstå föreningens ekonomi innan du köper.", "service"],
-  ["service.brf-analys.desc", "BRF beskrivning", "Ladda upp årsredovisningen så går vi igenom föreningens ekonomi: nyckeltal, risker och en tydlig bedömning. Du får också frågor att ställa till mäklaren.", "service"],
-  ["service.avtal-granskning.title", "Avtal titel", "Avtalskollen", "service"],
-  ["service.avtal-granskning.tagline", "Avtal kort", "Hitta fallgroparna innan du skriver under.", "service"],
-  ["service.avtal-granskning.desc", "Avtal beskrivning", "Ladda upp avtalet eller köpekontraktet så går vi igenom det från din sida: risker, dolda avgifter och förslag på tillägg som skyddar dig.", "service"],
-  ["service.overklagande.title", "Överklagande titel", "Överklagande-assistenten", "service"],
-  ["service.overklagande.tagline", "Överklagande kort", "Ett sakligt, korrekt formulerat överklagande.", "service"],
-  ["service.overklagande.desc", "Överklagande beskrivning", "Beskriv ärendet och ladda upp beslutet. Du får ett formellt överklagande med ett tydligt yrkande och en motivering, redo att signera.", "service"],
   ["footer.tagline", "Footer text", "Dokumenttjänster som hjälper dig vidare i jobbsöket.", "footer"],
 ];
 

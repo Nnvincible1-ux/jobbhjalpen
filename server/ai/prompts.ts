@@ -66,38 +66,7 @@ Leverera med Markdown-rubriker:
 2. "Svarsstrategier" – för varje fråga, en kort vägledning om hur användaren bäst svarar baserat på sin erfarenhet.
 3. "Tre frågor att ställa till arbetsgivaren".`,
   },
-  brf_analys: {
-    taskName: "att analysera en bostadsrättsförenings årsredovisning",
-    expectedDoc: "en årsredovisning för en bostadsrättsförening",
-    body: `Du är en ekonom specialiserad på bostadsrättsföreningar. Din uppgift: analysera den uppladdade årsredovisningen och hjälpa en bostadsköpare förstå föreningens ekonomi.
-Leverera med Markdown-rubriker:
-1. "Sammanfattande bedömning" – ett trafikljus (Grön / Gul / Röd) med en mening som motiverar.
-2. "Nyckeltal" – belåning per kvm, kassaflöde, räntekänslighet, planerat underhåll, avgiftsnivå (ange "framgår ej" om data saknas).
-3. "Risker att vara uppmärksam på".
-4. "Tre frågor att ställa till mäklaren".
-Påminn diskret om att detta är en informativ analys, inte finansiell rådgivning.`,
-  },
-  avtal_granskning: {
-    taskName: "att granska ett avtal eller köpekontrakt",
-    expectedDoc: "ett avtal eller köpekontrakt",
-    body: `Du är en avtalskunnig rådgivare. Din uppgift: granska det uppladdade avtalet ur användarens perspektiv (som privatperson).
-Leverera med Markdown-rubriker:
-1. "Sammanfattning" – vad avtalet i korthet innebär.
-2. "Fallgropar och risker" – t.ex. avsaknad av ångerrätt, dolda avgifter, orimliga dröjsmålsräntor, ensidiga friskrivningar.
-3. "Förslag på skyddande tillägg" – 2–3 klausuler användaren kan föreslå.
-Påminn diskret om att detta inte ersätter juridisk rådgivning vid större affärer.`,
-  },
-  overklagande: {
-    taskName: "att skriva ett överklagande till en myndighet",
-    expectedDoc: "ett myndighetsbeslut eller en ärendebeskrivning",
-    body: `Du är skicklig på formell svensk myndighetskorrespondens. Din uppgift: skriva ett sakligt, korrekt formulerat överklagande utifrån användarens beslut och beskrivning.
-Leverera ett färdigt dokument med:
-- Mottagare och ärendereferens (platshållare om okänt).
-- Tydlig yrkande-del ("Jag yrkar att ...").
-- Saklig motivering punkt för punkt.
-- Avslutande hälsning och plats för signatur.
-Håll tonen formell och respektfull.`,
-  },
+  // Privatlivsprompter (BRF, avtal, överklagande) är flyttade till repot mikroappar-privatliv.
 };
 
 export function getSystemPrompt(promptKey: string): string {

@@ -53,7 +53,7 @@ export function SiteFooter() {
   const brand = isCoach ? tenant!.name : getText("brand.name", "Jobbhjälpen");
   const tagline = isCoach
     ? (tenant!.tagline || "")
-    : getText("footer.tagline", "Specialiserade dokumenttjänster för jobbsök och privatliv.");
+    : getText("footer.tagline", "Dokumenttjänster som hjälper dig vidare i jobbsöket.");
   return (
     <footer className="mt-24 border-t">
       <div className="container flex flex-col items-start justify-between gap-4 py-10 sm:flex-row sm:items-center">

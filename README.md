@@ -10,9 +10,8 @@ Jobbhjälpen är en webbapplikation som säljer avgränsade AI-drivna dokumenttj
 | LinkedIn Makeover | Jobbsök | 49 kr | 3 | CV |
 | CV-Granskaren | Jobbsök | 49 kr | 3 | CV |
 | Intervjusimulatorn | Jobbsök | 49 kr | – | CV (+ annons) |
-| BRF-Granskaren | Privatliv | 49 kr | – | Årsredovisning |
-| Avtalskollen | Privatliv | 49 kr | – | Avtal/kontrakt |
-| Överklagande-assistenten | Privatliv | 49 kr | – | Beslut + ärendebeskrivning |
+
+> Privatlivstjänsterna har flyttats till ett separat repo (`mikroappar-privatliv`) och ingår inte i detta projekt.
 
 Detaljerade beskrivningar finns i [`docs/SERVICES.md`](docs/SERVICES.md).
 

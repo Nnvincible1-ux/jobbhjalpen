@@ -18,14 +18,7 @@ Utifrån CV och eventuell annons genereras de tio mest sannolika intervjufrågor
 
 ## Privatliv
 
-### BRF-Granskaren (`brf-analys`)
-Användaren laddar upp en bostadsrättsförenings årsredovisning. Leverans: en trafikljusbedömning, nyckeltal (belåning/kvm, kassaflöde, räntekänslighet, underhåll, avgift), risker och tre frågor till mäklaren. Tydlig markering om att det är informativ analys, inte finansiell rådgivning.
-
-### Avtalskollen (`avtal-granskning`)
-Användaren laddar upp ett avtal eller köpekontrakt. Leverans: sammanfattning, fallgropar och risker ur användarens perspektiv, samt förslag på skyddande tilläggsklausuler.
-
-### Överklagande-assistenten (`overklagande`)
-Användaren beskriver ärendet och laddar upp beslutet. Leverans: ett formellt, korrekt formulerat överklagande med yrkande och motivering, redo att signera.
+Privatlivstjänsterna (BRF-Granskaren, Avtalskollen, Överklagande-assistenten) är borttagna ur det här projektet och flyttade till ett separat repo, `mikroappar-privatliv`, för ett eventuellt framtida projekt.
 
 ## Justeringsrundor
 

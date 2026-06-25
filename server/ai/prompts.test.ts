@@ -8,12 +8,11 @@ describe("locked system prompts", () => {
       "linkedin_makeover",
       "cv_granskning",
       "intervju",
-      "brf_analys",
-      "avtal_granskning",
-      "overklagande",
     ]) {
       expect(isKnownPrompt(key)).toBe(true);
     }
+    // Privatlivsprompter är borttagna ur detta projekt.
+    expect(isKnownPrompt("brf_analys")).toBe(false);
     expect(isKnownPrompt("write_me_python")).toBe(false);
     expect(() => getSystemPrompt("write_me_python")).toThrow();
   });
