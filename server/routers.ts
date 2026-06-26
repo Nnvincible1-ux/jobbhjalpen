@@ -17,6 +17,8 @@ import {
   getParticipant,
   addMembership,
   createSession,
+  getAiSettings,
+  updateAiSettings,
   getArticleBySlug,
   getServiceBySlug,
   getSession,
@@ -215,6 +217,42 @@ export const appRouter = router({
       await publishAllDrafts(ctx.user.name ?? null);
       return { ok: true };
     }),
+  }),
+
+  /* --------------------------- AI settings ------------------------------ */
+  ai: router({
+    // Read current AI settings. apiKey is masked (only whether it is set).
+    get: adminProcedure.query(async () => {
+      const s = await getAiSettings();
+      return {
+        provider: s?.provider ?? "gemini",
+        apiBaseUrl: s?.apiBaseUrl ?? "https://generativelanguage.googleapis.com/v1beta/openai",
+        genModel: s?.genModel ?? "gemini-2.5-flash",
+        humanizerModel: s?.humanizerModel ?? "gemini-2.5-flash",
+        hasApiKey: Boolean(s?.apiKey && s.apiKey.length > 0),
+      };
+    }),
+    save: adminProcedure
+      .input(
+        z.object({
+          provider: z.string().min(1),
+          apiBaseUrl: z.string().min(1),
+          genModel: z.string().min(1),
+          humanizerModel: z.string().min(1),
+          apiKey: z.string().optional(), // empty/omitted = keep existing
+        })
+      )
+      .mutation(async ({ input }) => {
+        const patch: Record<string, unknown> = {
+          provider: input.provider,
+          apiBaseUrl: input.apiBaseUrl,
+          genModel: input.genModel,
+          humanizerModel: input.humanizerModel,
+        };
+        if (input.apiKey && input.apiKey.trim().length > 0) patch.apiKey = input.apiKey.trim();
+        await updateAiSettings(patch);
+        return { ok: true };
+      }),
   }),
 
   /* ----------------------------- Coach (org) ---------------------------- */

@@ -8,6 +8,7 @@ import {
   InsertParticipant,
   InsertServiceSession,
   InsertUser,
+  aiSettings,
   articles,
   memberships,
   participants,
@@ -195,6 +196,26 @@ export async function getServiceBySlug(slug: string) {
   if (!db) return undefined;
   const rows = await db.select().from(services).where(eq(services.slug, slug)).limit(1);
   return rows.length > 0 ? rows[0] : undefined;
+}
+
+/* ----------------------------- AI settings ------------------------------ */
+
+export async function getAiSettings() {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(aiSettings).limit(1);
+  return rows[0];
+}
+
+export async function updateAiSettings(patch: Partial<typeof aiSettings.$inferInsert>) {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await getAiSettings();
+  if (existing) {
+    await db.update(aiSettings).set(patch).where(eq(aiSettings.id, existing.id));
+  } else {
+    await db.insert(aiSettings).values(patch as typeof aiSettings.$inferInsert);
+  }
 }
 
 /* ------------------------------- Articles ------------------------------- */

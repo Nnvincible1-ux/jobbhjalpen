@@ -239,3 +239,22 @@ export const articles = mysqlTable("articles", {
 });
 export type Article = typeof articles.$inferSelect;
 export type InsertArticle = typeof articles.$inferInsert;
+
+
+/**
+ * AI provider settings, editable from the admin panel.
+ * Lets the owner switch provider/model/key without code changes.
+ * Single row (id=1).
+ */
+export const aiSettings = mysqlTable("ai_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  provider: varchar("provider", { length: 32 }).default("gemini").notNull(),
+  apiBaseUrl: varchar("apiBaseUrl", { length: 255 })
+    .default("https://generativelanguage.googleapis.com/v1beta/openai")
+    .notNull(),
+  apiKey: text("apiKey"),
+  genModel: varchar("genModel", { length: 96 }).default("gemini-2.5-flash").notNull(),
+  humanizerModel: varchar("humanizerModel", { length: 96 }).default("gemini-2.5-flash").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AiSettings = typeof aiSettings.$inferSelect;

@@ -138,6 +138,7 @@ function AdminPanel() {
           <TabsList>
             <TabsTrigger value="texts">Texter</TabsTrigger>
             <TabsTrigger value="faq">FAQ</TabsTrigger>
+            <TabsTrigger value="ai">AI</TabsTrigger>
           </TabsList>
 
           <TabsContent value="texts" className="mt-6 space-y-8">
@@ -205,10 +206,170 @@ function AdminPanel() {
               />
             ))}
           </TabsContent>
+
+          <TabsContent value="ai" className="mt-6">
+            <AiSettingsPanel />
+          </TabsContent>
         </Tabs>
       </main>
     </div>
   );
+}
+
+const PROVIDER_PRESETS: Record<string, { label: string; apiBaseUrl: string; gen: string; humanizer: string; help: string }> = {
+  gemini: {
+    label: "Google Gemini (gratis att börja med)",
+    apiBaseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
+    gen: "gemini-2.5-flash",
+    humanizer: "gemini-2.5-flash",
+    help: "Skaffa en gratis nyckel på aistudio.google.com/apikey",
+  },
+  openai: {
+    label: "OpenAI",
+    apiBaseUrl: "https://api.openai.com/v1",
+    gen: "gpt-5",
+    humanizer: "gpt-5-mini",
+    help: "Skaffa nyckel på platform.openai.com (börjar med sk-)",
+  },
+  anthropic: {
+    label: "Anthropic Claude",
+    apiBaseUrl: "https://api.anthropic.com/v1",
+    gen: "claude-sonnet-4-6",
+    humanizer: "claude-haiku-4-5",
+    help: "Skaffa nyckel på console.anthropic.com",
+  },
+  custom: {
+    label: "Annan (OpenAI-kompatibel)",
+    apiBaseUrl: "",
+    gen: "",
+    humanizer: "",
+    help: "Ange en OpenAI-kompatibel API-bas-URL och modellnamn.",
+  },
+};
+
+function AiSettingsPanel() {
+  const { data, isLoading } = trpc.ai.get.useQuery();
+  const utils = trpc.useUtils();
+  const save = trpc.ai.save.useMutation();
+
+  const [provider, setProvider] = useState("gemini");
+  const [apiBaseUrl, setApiBaseUrl] = useState(PROVIDER_PRESETS.gemini.apiBaseUrl);
+  const [genModel, setGenModel] = useState(PROVIDER_PRESETS.gemini.gen);
+  const [humanizerModel, setHumanizerModel] = useState(PROVIDER_PRESETS.gemini.humanizer);
+  const [apiKey, setApiKey] = useState("");
+  const [loaded, setLoaded] = useState(false);
+
+  useMemoInit(() => {
+    if (data && !loaded) {
+      setProvider(data.provider);
+      setApiBaseUrl(data.apiBaseUrl);
+      setGenModel(data.genModel);
+      setHumanizerModel(data.humanizerModel);
+      setLoaded(true);
+    }
+  }, [data, loaded]);
+
+  const applyPreset = (p: string) => {
+    setProvider(p);
+    const preset = PROVIDER_PRESETS[p];
+    if (preset && p !== "custom") {
+      setApiBaseUrl(preset.apiBaseUrl);
+      setGenModel(preset.gen);
+      setHumanizerModel(preset.humanizer);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="grid place-items-center py-12">
+        <Loader2 className="h-5 w-5 animate-spin" />
+      </div>
+    );
+  }
+
+  const preset = PROVIDER_PRESETS[provider] ?? PROVIDER_PRESETS.custom;
+
+  return (
+    <div className="max-w-2xl space-y-5 rounded-2xl border bg-card p-6">
+      <div>
+        <h2 className="font-display text-lg font-semibold">AI-inställningar</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Välj leverantör, modeller och API-nyckel. Ändringar gäller direkt, ingen omstart krävs.
+        </p>
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">Leverantör</label>
+        <select
+          className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+          value={provider}
+          onChange={(e) => applyPreset(e.target.value)}
+        >
+          {Object.entries(PROVIDER_PRESETS).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v.label}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-muted-foreground">{preset.help}</p>
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">API-bas-URL</label>
+        <Input className="mt-1" value={apiBaseUrl} onChange={(e) => setApiBaseUrl(e.target.value)} />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="text-sm font-medium">Genereringsmodell</label>
+          <Input className="mt-1" value={genModel} onChange={(e) => setGenModel(e.target.value)} />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Humaniseringsmodell</label>
+          <Input className="mt-1" value={humanizerModel} onChange={(e) => setHumanizerModel(e.target.value)} />
+        </div>
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">API-nyckel</label>
+        <Input
+          className="mt-1"
+          type="password"
+          placeholder={data?.hasApiKey ? "•••••••• (sparad, lämna tom för att behålla)" : "Klistra in din API-nyckel"}
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          {data?.hasApiKey ? "En nyckel är redan sparad. Fyll bara i om du vill byta den." : "Ingen nyckel sparad ännu."}
+        </p>
+      </div>
+
+      <Button
+        onClick={() =>
+          save.mutate(
+            { provider, apiBaseUrl, genModel, humanizerModel, apiKey: apiKey || undefined },
+            {
+              onSuccess: () => {
+                toast.success("AI-inställningar sparade.");
+                setApiKey("");
+                utils.ai.get.invalidate();
+              },
+              onError: (e) => toast.error(e.message),
+            }
+          )
+        }
+        disabled={save.isPending}
+      >
+        {save.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+        Spara AI-inställningar
+      </Button>
+    </div>
+  );
+}
+
+// Tiny helper to run an effect-like init without importing useEffect separately.
+function useMemoInit(fn: () => void, deps: unknown[]) {
+  useMemo(fn, deps);
 }
 
 function TextRow(props: {
