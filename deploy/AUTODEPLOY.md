@@ -4,6 +4,10 @@ När det här är uppsatt sker varje framtida uppdatering automatiskt: jag pusha
 
 Det finns tre delar: en deploy-nyckel så att GitHub får logga in på servern, fem GitHub Secrets med dina serveruppgifter, och en första manuell installation på servern. Efter det är allt automatiskt.
 
+## Del 0: Skapa workflow-filen i GitHub (en gång)
+
+Av säkerhetsskäl kan jag inte pusha själva workflow-filen automatiskt, så du skapar den via GitHubs webbgränssnitt (tar en halv minut). Gå till repot på GitHub, klicka Add file, sedan Create new file. Skriv sökvägen `.github/workflows/deploy.yml` i filnamnsfältet. Öppna filen `deploy/github-workflow-deploy.yml.txt` i repot, kopiera hela innehållet, och klistra in det i den nya filen. Klicka Commit changes. Klart.
+
 ## Del 1: Skapa en deploy-nyckel (på din VPS)
 
 Logga in på din VPS och skapa ett SSH-nyckelpar som bara används för deploy.
