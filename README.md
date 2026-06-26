@@ -1,86 +1,81 @@
-# Jobbhjälpen
+# CV-piloten
 
-Jobbhjälpen är en webbapplikation som säljer avgränsade AI-drivna dokumenttjänster för jobbsök och privatliv. Varje tjänst är ett engångsköp för 49 kr. Produkten är byggd kring rekryterings-, ekonomi- och avtalsexpertis; AI används som en tyst motor i bakgrunden för att leverera den expertisen snabbt.
+CV-piloten är en svensk webbapplikation som hjälper människor vidare i jobbsöket genom avgränsade AI-drivna tjänster. Varje tjänst är ett engångsköp för 49 kr. Produkten bygger på rekryteringsexpertis; AI används som en tyst motor i bakgrunden för att leverera den expertisen snabbt, och allt AI-genererat språk humaniseras automatiskt.
+
+Domän: cvpiloten.se (driftas på egen VPS). Varumärke och all text är CMS-redigerbart.
 
 ## Tjänster
 
-| Tjänst | Kategori | Pris | Justeringsrundor | Underlag |
-| :--- | :--- | :--- | :--- | :--- |
-| Skräddarsydd ansökan | Jobbsök | 49 kr | – | CV + jobbannons |
-| LinkedIn Makeover | Jobbsök | 49 kr | 3 | CV |
-| CV-Granskaren | Jobbsök | 49 kr | 3 | CV |
-| Intervjusimulatorn | Jobbsök | 49 kr | – | CV (+ annons) |
+| Tjänst | Pris | Justeringsrundor | Underlag |
+| :--- | :--- | :--- | :--- |
+| Skräddarsydd ansökan (CV + brev mot annons) | 49 kr | – | CV + jobbannons |
+| LinkedIn Makeover | 49 kr | 3 | CV |
+| CV-Granskaren | 49 kr | 3 | CV |
+| Intervjusimulatorn | 49 kr | – | CV (+ annons) |
 
-> Privatlivstjänsterna har flyttats till ett separat repo (`mikroappar-privatliv`) och ingår inte i detta projekt.
+> Privatlivstjänsterna (BRF, avtal, överklagande) är flyttade till ett separat repo (`mikroappar-privatliv`) och ingår inte här.
 
-Detaljerade beskrivningar finns i [`docs/SERVICES.md`](docs/SERVICES.md).
+Detaljer i [`docs/SERVICES.md`](docs/SERVICES.md).
 
 ## Kärnprinciper
 
-Tre regler styr hela arkitekturen och får aldrig brytas:
+1. **Inget AI-anrop före filvalidering.** Endast PDF, DOC, DOCX och TXT accepteras. Bild-PDF utan läsbar text avvisas innan modellen kontaktas.
+2. **Modellen är låst per tjänst.** Strikt systemprompt per tjänst som vägrar allmänna frågor och aldrig tolkar bilder. Se [`docs/PROMPT_ARCHITECTURE.md`](docs/PROMPT_ARCHITECTURE.md).
+3. **Betalning är enda låset.** En session körs endast när `paymentStatus = 'paid'`, satt av Stripe. Justeringsrundor räknas ned i databasen.
+4. **All copy humaniseras.** Genererad text passerar ett humaniseringssteg plus deterministisk städning. Se [`docs/AI_OCH_DRIFT.md`](docs/AI_OCH_DRIFT.md).
 
-1. **Inget AI-anrop sker innan filvalidering är klar.** Uppladdade filer pre-processas på servern. Endast PDF, DOC, DOCX och TXT accepteras. Bild-only-PDF:er utan läsbar text avvisas innan modellen kontaktas.
-2. **Modellen är låst per tjänst.** Varje tjänst har en strikt systemprompt som bara tillåter sin egna uppgift, vägrar svara på allmänna frågor och aldrig tolkar bilder. Se [`docs/PROMPT_ARCHITECTURE.md`](docs/PROMPT_ARCHITECTURE.md).
-3. **Betalning är enda låset.** En session kan endast köras när `paymentStatus = 'paid'`, satt av Stripe. Justeringsrundor räknas ned i databasen, aldrig i klienten.
+## AI-flöde
+
+En stark modell (`GEN_MODEL`) genererar, en billig modell (`HUMANIZER_MODEL`) humaniserar användarvänd copy, och `stripAiTells` städar all output. Modellnamn och API-nyckel läses från miljön, så leverantör/modell kan bytas utan kodändring (`server/ai/engine.ts`, `server/ai/humanizer.ts`).
+
+## Innehåll och SEO/AEO/GEO
+
+Sajten har ett guidebibliotek (pillar + kluster + 30+ yrkesguider) i databasen, CMS-redigerbart med draft/publish. Varje guide har ett citatvänligt svarsblock (answerBlock) för AI-sökmotorer. Teknisk AEO/GEO: `robots.txt` släpper in AI-crawlers, dynamisk `/llms.txt`, dynamisk `/sitemap.xml`, samt Organization-, WebSite- och Article-schema. Strategi i [`docs/SEO_STRATEGY.md`](docs/SEO_STRATEGY.md).
 
 ## Teknisk stack
 
-React 19, TypeScript, Tailwind CSS 4, tRPC 11, Drizzle ORM (MySQL/TiDB), Express 4. Innehåll hanteras via ett inbyggt CMS med draft/publish.
-
-## Projektstruktur
-
-```
-server/
-  ai/
-    prompts.ts          Låsta systemprompter (7 tjänster) + guardrails
-    fileProcessing.ts   Filvalidering + textextraktion (pre-processing)
-    engine.ts           AI-körning + justeringsrundor
-  payments/stripe.ts    Stripe-klient (graceful om ej konfigurerad)
-  routes.ts             Upload, checkout, webhook, confirm, sitemap
-  routers.ts            tRPC: services, content, session, cms (admin)
-  db.ts                 DB-hjälpare
-  seed.ts               Auto-seed av tjänster, CMS-text, FAQ, stilar
-drizzle/schema.ts       Databasschema (8 tabeller)
-client/src/
-  pages/                Home, ServicePage, ResultPage, Privacy, AdminPage
-  contexts/CmsContext   getText/getStyle-provider
-  components/           SiteChrome, CookieConsent
-```
+React 19, TypeScript, Tailwind CSS 4, tRPC 11, Drizzle ORM (MySQL/MariaDB), Express 4. Typografi: Newsreader (rubriker) + Inter (brödtext).
 
 ## Köra lokalt
 
 ```bash
 pnpm install
-pnpm dev          # startar server + Vite
-pnpm test         # kör vitest
+pnpm dev          # server + Vite
+pnpm test         # vitest
 pnpm check        # typecheck
+pnpm build        # produktionsbygge
 ```
 
-## Miljövariabler
+## Drift på egen VPS (Hostinger)
 
-Se [`.env.example`](.env.example). I POC-läge (utan `STRIPE_SECRET_KEY`) faller betalsteget tillbaka till ett demoläge så hela flödet kan provas.
+CV-piloten körs på en VPS, inte på shared hosting, eftersom den är en ständigt körande Node-process med databas, AI-anrop och Stripe-webhooks. Allt som behövs ligger i `deploy/`:
 
-## Hosting
+| Fil | Syfte |
+| :--- | :--- |
+| [`deploy/GUIDE_HOSTINGER.md`](deploy/GUIDE_HOSTINGER.md) | Steg-för-steg från tom server till live på cvpiloten.se |
+| [`deploy/STRIPE.md`](deploy/STRIPE.md) | Aktivera Stripe-betalning (webhook, testkort, säkerhet) |
+| [`deploy/ENV.sample.md`](deploy/ENV.sample.md) | Alla miljövariabler för `.env` |
+| [`deploy/Caddyfile`](deploy/Caddyfile) | HTTPS via Caddy (automatiskt certifikat) |
+| [`deploy/nginx-cvpiloten.conf`](deploy/nginx-cvpiloten.conf) | Alternativ: Nginx + Certbot |
+| [`deploy/ecosystem.config.cjs`](deploy/ecosystem.config.cjs) | PM2-process |
+| [`deploy/cvpiloten.service`](deploy/cvpiloten.service) | Alternativ: systemd-enhet |
+| [`deploy/deploy.sh`](deploy/deploy.sh) | Uppdatera servern: pull, bygg, starta om |
 
-Projektet är byggt VPS-portabelt. Guide för att flytta från Manus WebDev till egen VPS finns i [`docs/MIGRATION.md`](docs/MIGRATION.md).
+Kortversion på servern: klona repot, fyll i `.env` enligt `deploy/ENV.sample.md`, kör `pnpm install && pnpm build && pnpm drizzle-kit migrate`, starta med PM2, och sätt HTTPS med Caddy. Webhook till Stripe: `https://cvpiloten.se/api/stripe/webhook` (händelse `checkout.session.completed`).
 
 ## White-label SaaS för jobbcoach-bolag
 
-Utöver konsumenttjänsten (49 kr per styck) kan plattformen köras som multi-tenant white-label för jobbcoach-bolag (Rusta och matcha-leverantörer). Konsumentsajten är `default`-tenanten; varje coach-bolag får en egen tenant med eget namn, logga, färger och subdomän.
-
-- **Tenant-resolver** (`server/tenant.ts`) läser tenant från subdomän/host, med `?tenant=slug` för dev. Branding laddas via `/api/service/tenant` och appliceras i `TenantContext`.
-- **Roller** via `memberships` (`org_admin`, `coach`). En handledare ser bara sin organisations deltagare (`assertTenantAccess`).
-- **Handledarportal** på `/coach`: lägg upp deltagare, byt status, och starta tjänster i deltagar-/organisationskontext. Sådana sessioner är org-betalda (ingår i abonnemang) i stället för 49 kr.
-- **Org-fakturering** via `subscriptions` (per handledare / per deltagare / plattformsavgift), separat från konsumentens 49 kr-flöde.
-- **Säkerhet**: org-uppladdning kräver autentiserad användare med medlemskap i tenanten, annars faller flödet tillbaka till vanlig (obetald) konsumentsession.
-
-Affärsunderlag och utbyggnad: se [`docs/SAAS_WHITELABEL.md`](docs/SAAS_WHITELABEL.md).
+Plattformen kan köras multi-tenant white-label för jobbcoach-bolag, parallellt med 49 kr-konsumentflödet. Tenant-resolver per subdomän, roller (`org_admin`/`coach`), handledarportal på `/coach`, och organisationsfakturering via `subscriptions`. Affärsunderlag i [`docs/SAAS_WHITELABEL.md`](docs/SAAS_WHITELABEL.md).
 
 ## Dokumentation
 
 - [`docs/SERVICES.md`](docs/SERVICES.md) – tjänstebeskrivningar
 - [`docs/PROMPT_ARCHITECTURE.md`](docs/PROMPT_ARCHITECTURE.md) – systemlåsning och guardrails
+- [`docs/AI_OCH_DRIFT.md`](docs/AI_OCH_DRIFT.md) – modellval, humanizer och drift
+- [`docs/SEO_STRATEGY.md`](docs/SEO_STRATEGY.md) – SEO/AEO/GEO-strategi
+- [`docs/BRANDBOOK.md`](docs/BRANDBOOK.md) – varumärkesriktlinjer
+- [`docs/OM_OSS.md`](docs/OM_OSS.md) – om oss-texten
 - [`docs/COST_MARGIN.md`](docs/COST_MARGIN.md) – kostnads- och marginalanalys
 - [`docs/TECHNICAL_DECISIONS.md`](docs/TECHNICAL_DECISIONS.md) – tekniska beslut
-- [`docs/MIGRATION.md`](docs/MIGRATION.md) – VPS-migrationsguide
-- [`docs/SAAS_WHITELABEL.md`](docs/SAAS_WHITELABEL.md) – white-label/SaaS-modell för jobbcoach-bolag
+- [`docs/SAAS_WHITELABEL.md`](docs/SAAS_WHITELABEL.md) – white-label/SaaS-modell
+- [`docs/MIGRATION.md`](docs/MIGRATION.md) – generell VPS-migrationsguide
