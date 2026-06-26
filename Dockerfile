@@ -20,5 +20,7 @@ COPY patches ./patches
 RUN pnpm install --frozen-lockfile --prod
 COPY --from=build /app/dist ./dist
 COPY drizzle ./drizzle
+COPY scripts ./scripts
 EXPOSE 3000
-CMD ["node", "dist/index.js"]
+# Run idempotent migrations, then start the server.
+CMD ["sh", "-c", "node scripts/migrate.mjs && node dist/index.js"]
