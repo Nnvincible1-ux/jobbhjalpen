@@ -1,0 +1,28 @@
+name: Deploy till VPS
+
+# Kör automatiskt vid varje push till main, eller manuellt från Actions-fliken.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploya via SSH till Hostinger-VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            set -e
+            cd ${{ secrets.VPS_APP_DIR }}
+            git pull origin main
+            pnpm install --frozen-lockfile
+            pnpm build
+            pnpm drizzle-kit migrate || echo "Inga migreringar att köra"
+            pm2 restart cvpiloten || pm2 start deploy/ecosystem.config.cjs
+            pm2 save
