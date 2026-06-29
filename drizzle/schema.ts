@@ -288,6 +288,7 @@ export const siteSettings = mysqlTable("site_settings", {
   id: int("id").autoincrement().primaryKey(),
   fbPixelId: varchar("fbPixelId", { length: 64 }),
   ga4Id: varchar("ga4Id", { length: 64 }),
+  accessCode: varchar("accessCode", { length: 64 }),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type SiteSettings = typeof siteSettings.$inferSelect;

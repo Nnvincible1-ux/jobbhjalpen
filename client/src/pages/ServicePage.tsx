@@ -90,19 +90,28 @@ export default function ServicePage() {
         setBusy(false);
         return;
       }
-      // Proceed to payment.
+      // Proceed to payment (or free/test mode when price is 0 kr).
+      const isFree = service.priceSek === 0;
+      let accessCode: string | undefined;
+      if (isFree) {
+        accessCode = window.prompt("Den här tjänsten är i testläge. Ange åtkomstkod:") || "";
+      }
       const checkout = await fetch("/api/service/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sessionId: data.sessionId, origin: window.location.origin }),
+        body: JSON.stringify({ sessionId: data.sessionId, origin: window.location.origin, accessCode }),
       });
       const co = await checkout.json();
-      if (co.ok && co.url) {
+      if (co.ok && co.free) {
+        navigate(`/resultat/${data.sessionId}`);
+      } else if (co.ok && co.url) {
         window.location.href = co.url;
+      } else if (co.needCode) {
+        setError("Fel åtkomstkod för testläge.");
+        setBusy(false);
       } else {
-        // POC fallback: no Stripe configured → go to result page in demo mode.
-        toast.info("Demoläge: betalningen simuleras eftersom Stripe inte är konfigurerat ännu.");
-        navigate(`/resultat/${data.sessionId}?demo=1`);
+        setError(co.message || "Kunde inte starta betalning.");
+        setBusy(false);
       }
     } catch (e) {
       setError("Något gick fel. Försök igen.");
@@ -135,7 +144,7 @@ export default function ServicePage() {
             <ul className="mt-6 space-y-3 text-sm">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4" style={{ color: "var(--brand-accent)" }} />
-                Fast pris {service.priceSek} kr, engångsbetalning
+                {service.priceSek === 0 ? "Testläge – ingen betalning" : `Fast pris ${service.priceSek} kr, engångsbetalning`}
               </li>
               {service.hasAdjustments && (
                 <li className="flex items-center gap-2">
@@ -197,7 +206,7 @@ export default function ServicePage() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Bearbetar...
                 </>
               ) : (
-                `Fortsätt till betalning – ${service.priceSek} kr`
+                service.priceSek === 0 ? "Starta (testläge)" : `Fortsätt till betalning – ${service.priceSek} kr`
               )}
             </Button>
             <p className="mt-3 text-center text-xs text-muted-foreground">

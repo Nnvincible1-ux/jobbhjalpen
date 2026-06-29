@@ -162,6 +162,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
       <main className="container py-8">
         <Tabs defaultValue="texts">
           <TabsList>
+            <TabsTrigger value="services">Tjänster</TabsTrigger>
             <TabsTrigger value="texts">Texter</TabsTrigger>
             <TabsTrigger value="faq">FAQ</TabsTrigger>
             <TabsTrigger value="ai">AI</TabsTrigger>
@@ -236,6 +237,10 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
 
           <TabsContent value="ai" className="mt-6">
             <AiSettingsPanel />
+          </TabsContent>
+
+          <TabsContent value="services" className="mt-6">
+            <ServicesPanel />
           </TabsContent>
 
           <TabsContent value="tracking" className="mt-6">
@@ -401,6 +406,126 @@ function AiSettingsPanel() {
 // Tiny helper to run an effect-like init without importing useEffect separately.
 function useMemoInit(fn: () => void, deps: unknown[]) {
   useMemo(fn, deps);
+}
+
+function ServicesPanel() {
+  const utils = trpc.useUtils();
+  const { data, isLoading } = trpc.servicesAdmin.list.useQuery();
+  const update = trpc.servicesAdmin.update.useMutation();
+  const codeQuery = trpc.servicesAdmin.getAccessCode.useQuery();
+  const setCode = trpc.servicesAdmin.setAccessCode.useMutation();
+  const [code, setCode2] = useState("");
+  const [codeLoaded, setCodeLoaded] = useState(false);
+  const [prices, setPrices] = useState<Record<string, string>>({});
+
+  useMemoInit(() => {
+    if (codeQuery.data && !codeLoaded) {
+      setCode2(codeQuery.data.accessCode);
+      setCodeLoaded(true);
+    }
+  }, [codeQuery.data, codeLoaded]);
+
+  if (isLoading || !data) {
+    return (
+      <div className="grid place-items-center py-12">
+        <Loader2 className="h-5 w-5 animate-spin" />
+      </div>
+    );
+  }
+
+  const labelFor = (slug: string) => slug.replace(/-/g, " ");
+
+  return (
+    <div className="space-y-6">
+      <div className="max-w-2xl rounded-2xl border bg-amber-50 p-5 text-sm text-amber-900">
+        <p className="font-medium">Testläge</p>
+        <p className="mt-1">
+          Sätt en tjänsts pris till <strong>0 kr</strong> för att testa hela flödet gratis (ingen betalning). En tjänst med 0 kr kräver åtkomstkoden nedan för att köras, så allmänheten inte kan använda den. Sätt pris &gt; 0 och tänd tjänsten för skarp försäljning via Stripe. Släckta tjänster döljs helt på sajten.
+        </p>
+        <div className="mt-3 flex items-end gap-2">
+          <div className="flex-1">
+            <label className="text-xs font-medium">Åtkomstkod (för 0 kr-läge)</label>
+            <Input className="mt-1 bg-white" value={code} onChange={(e) => setCode2(e.target.value)} placeholder="t.ex. testa123" />
+          </div>
+          <Button
+            onClick={() =>
+              setCode.mutate(
+                { accessCode: code },
+                {
+                  onSuccess: () => {
+                    toast.success("Åtkomstkod sparad.");
+                    utils.servicesAdmin.getAccessCode.invalidate();
+                  },
+                  onError: (e) => toast.error(e.message),
+                }
+              )
+            }
+            disabled={setCode.isPending}
+          >
+            Spara kod
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {data.map((s) => (
+          <div key={s.slug} className="flex flex-wrap items-center gap-4 rounded-xl border bg-card p-4">
+            <div className="min-w-[180px] flex-1">
+              <p className="font-medium capitalize">{labelFor(s.slug)}</p>
+              <p className="text-xs text-muted-foreground">{s.slug}</p>
+            </div>
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={s.active}
+                onChange={(e) =>
+                  update.mutate(
+                    { slug: s.slug, active: e.target.checked },
+                    {
+                      onSuccess: () => utils.servicesAdmin.list.invalidate(),
+                      onError: (err) => toast.error(err.message),
+                    }
+                  )
+                }
+              />
+              {s.active ? "Tänd" : "Släckt"}
+            </label>
+
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                className="w-24"
+                value={prices[s.slug] ?? String(s.priceSek)}
+                onChange={(e) => setPrices((p) => ({ ...p, [s.slug]: e.target.value }))}
+              />
+              <span className="text-sm text-muted-foreground">kr</span>
+              <Button
+                variant="outline"
+                className="bg-background"
+                onClick={() => {
+                  const val = Number(prices[s.slug] ?? s.priceSek);
+                  if (Number.isNaN(val) || val < 0) return toast.error("Ogiltigt pris.");
+                  update.mutate(
+                    { slug: s.slug, priceSek: val },
+                    {
+                      onSuccess: () => {
+                        toast.success(`Pris sparat: ${val} kr`);
+                        utils.servicesAdmin.list.invalidate();
+                      },
+                      onError: (err) => toast.error(err.message),
+                    }
+                  );
+                }}
+              >
+                Spara pris
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function TrackingPanel() {

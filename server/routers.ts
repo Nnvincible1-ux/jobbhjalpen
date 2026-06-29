@@ -22,6 +22,8 @@ import {
   updateAiSettings,
   getSiteSettings,
   updateSiteSettings,
+  listAllServices,
+  updateServiceAdmin,
   getArticleBySlug,
   getServiceBySlug,
   getSession,
@@ -262,7 +264,7 @@ export const appRouter = router({
   tracking: router({
     get: cmsAdminProcedure.query(async () => {
       const s = await getSiteSettings();
-      return { fbPixelId: s?.fbPixelId ?? "", ga4Id: s?.ga4Id ?? "" };
+      return { fbPixelId: s?.fbPixelId ?? "", ga4Id: s?.ga4Id ?? "", accessCode: s?.accessCode ?? "" };
     }),
     save: cmsAdminProcedure
       .input(z.object({ fbPixelId: z.string(), ga4Id: z.string() }))
@@ -271,6 +273,35 @@ export const appRouter = router({
           fbPixelId: input.fbPixelId.trim() || null,
           ga4Id: input.ga4Id.trim() || null,
         });
+        return { ok: true };
+      }),
+  }),
+
+  /* --------------------------- Services (admin) ------------------------- */
+  servicesAdmin: router({
+    // List all services incl. inactive, with price + active flag.
+    list: cmsAdminProcedure.query(async () => {
+      const all = await listAllServices();
+      return all.map((s) => ({ slug: s.slug, category: s.category, priceSek: s.priceSek, active: s.active, sortOrder: s.sortOrder }));
+    }),
+    update: cmsAdminProcedure
+      .input(z.object({ slug: z.string(), active: z.boolean().optional(), priceSek: z.number().min(0).optional() }))
+      .mutation(async ({ input }) => {
+        await updateServiceAdmin(input.slug, {
+          ...(input.active !== undefined ? { active: input.active } : {}),
+          ...(input.priceSek !== undefined ? { priceSek: input.priceSek } : {}),
+        });
+        return { ok: true };
+      }),
+    // Test access code (free-mode gate while testing).
+    getAccessCode: cmsAdminProcedure.query(async () => {
+      const s = await getSiteSettings();
+      return { accessCode: s?.accessCode ?? "" };
+    }),
+    setAccessCode: cmsAdminProcedure
+      .input(z.object({ accessCode: z.string() }))
+      .mutation(async ({ input }) => {
+        await updateSiteSettings({ accessCode: input.accessCode.trim() || null });
         return { ok: true };
       }),
   }),

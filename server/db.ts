@@ -192,6 +192,20 @@ export async function listServices() {
   return db.select().from(services).where(eq(services.active, true)).orderBy(asc(services.sortOrder));
 }
 
+// Admin: list ALL services incl. inactive.
+export async function listAllServices() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(services).orderBy(asc(services.sortOrder));
+}
+
+// Admin: toggle active and/or set price for a service.
+export async function updateServiceAdmin(slug: string, patch: { active?: boolean; priceSek?: number }) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(services).set(patch).where(eq(services.slug, slug));
+}
+
 export async function getServiceBySlug(slug: string) {
   const db = await getDb();
   if (!db) return undefined;
@@ -388,6 +402,16 @@ export async function markSessionPaid(stripeSessionId: string) {
     .update(serviceSessions)
     .set({ paymentStatus: "paid" })
     .where(eq(serviceSessions.stripeSessionId, stripeSessionId));
+}
+
+// Unlock a session directly by our own session id (used by free/test mode).
+export async function markSessionPaidById(sessionId: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(serviceSessions)
+    .set({ paymentStatus: "paid" })
+    .where(eq(serviceSessions.id, sessionId));
 }
 
 export async function getSessionByStripeId(stripeSessionId: string) {

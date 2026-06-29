@@ -10,6 +10,7 @@ import {
   listArticles,
   listServices,
   markSessionPaid,
+  markSessionPaidById,
   updateSession,
 } from "./db";
 import { extractText } from "./ai/fileProcessing";
@@ -168,11 +169,23 @@ export function registerCustomRoutes(app: Express) {
   // ---- Create Stripe checkout session for a prepared session ----
   router.post("/checkout", async (req: Request, res: Response) => {
     try {
-      const { sessionId, origin } = req.body as { sessionId: string; origin: string };
+      const { sessionId, origin, accessCode } = req.body as { sessionId: string; origin: string; accessCode?: string };
       const session = await getSession(sessionId);
       if (!session) return res.status(404).json({ ok: false, message: "Session saknas." });
       const service = await getServiceBySlug(session.serviceSlug);
       if (!service) return res.status(404).json({ ok: false, message: "Tjänst saknas." });
+
+      // Free/test mode: when a service costs 0 kr, skip Stripe entirely.
+      // Requires the correct access code (set in admin) so the public can't use it.
+      if (service.priceSek === 0) {
+        const settings = await getSiteSettings();
+        const requiredCode = settings?.accessCode || "";
+        if (requiredCode && (accessCode || "").trim() !== requiredCode) {
+          return res.status(403).json({ ok: false, message: "Fel åtkomstkod.", needCode: true });
+        }
+        await markSessionPaidById(sessionId);
+        return res.json({ ok: true, free: true, url: `${origin}/resultat/${sessionId}?paid=1` });
+      }
 
       if (!isStripeConfigured()) {
         return res.status(503).json({ ok: false, message: "Betalning är inte konfigurerad ännu." });
