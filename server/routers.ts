@@ -170,7 +170,7 @@ export const appRouter = router({
 
   /* ------------------------------ CMS admin ----------------------------- */
   cms: router({
-    all: adminProcedure.query(async () => {
+    all: cmsAdminProcedure.query(async () => {
       // Admin sees draft overlay so editing reflects pending changes.
       const [texts, styles, faq] = await Promise.all([
         getCmsTexts(true),
@@ -180,7 +180,7 @@ export const appRouter = router({
       return { texts, styles, faq };
     }),
 
-    saveText: adminProcedure
+    saveText: cmsAdminProcedure
       .input(z.object({ textKey: z.string(), content: z.string() }))
       .mutation(async ({ input }) => {
         // Edits go to draft (isDraft=true) until published.
@@ -188,14 +188,14 @@ export const appRouter = router({
         return { ok: true };
       }),
 
-    saveStyle: adminProcedure
+    saveStyle: cmsAdminProcedure
       .input(z.object({ styleKey: z.string(), value: z.string() }))
       .mutation(async ({ input }) => {
         await updateCmsStyle(input.styleKey, input.value);
         return { ok: true };
       }),
 
-    saveFaq: adminProcedure
+    saveFaq: cmsAdminProcedure
       .input(
         z.object({
           id: z.number().optional(),
@@ -209,15 +209,15 @@ export const appRouter = router({
         return { ok: true };
       }),
 
-    deleteFaq: adminProcedure
+    deleteFaq: cmsAdminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await deleteFaq(input.id);
         return { ok: true };
       }),
 
-    publish: adminProcedure.mutation(async ({ ctx }) => {
-      await publishAllDrafts(ctx.user.name ?? null);
+    publish: cmsAdminProcedure.mutation(async ({ ctx }) => {
+      await publishAllDrafts(ctx.admin.email ?? null);
       return { ok: true };
     }),
   }),
@@ -225,7 +225,7 @@ export const appRouter = router({
   /* --------------------------- AI settings ------------------------------ */
   ai: router({
     // Read current AI settings. apiKey is masked (only whether it is set).
-    get: adminProcedure.query(async () => {
+    get: cmsAdminProcedure.query(async () => {
       const s = await getAiSettings();
       return {
         provider: s?.provider ?? "gemini",
@@ -260,11 +260,11 @@ export const appRouter = router({
 
   /* --------------------------- Tracking (admin) ------------------------- */
   tracking: router({
-    get: adminProcedure.query(async () => {
+    get: cmsAdminProcedure.query(async () => {
       const s = await getSiteSettings();
       return { fbPixelId: s?.fbPixelId ?? "", ga4Id: s?.ga4Id ?? "" };
     }),
-    save: adminProcedure
+    save: cmsAdminProcedure
       .input(z.object({ fbPixelId: z.string(), ga4Id: z.string() }))
       .mutation(async ({ input }) => {
         await updateSiteSettings({
