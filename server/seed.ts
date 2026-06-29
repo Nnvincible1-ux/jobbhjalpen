@@ -3,7 +3,7 @@
  * Runs once at server startup; never overwrites edited rows.
  */
 import { getDb } from "./db";
-import { articles, cmsContent, cmsFaq, cmsStyles, services } from "../drizzle/schema";
+import { adminUsers, articles, cmsContent, cmsFaq, cmsStyles, services, siteSettings } from "../drizzle/schema";
 import { sql } from "drizzle-orm";
 import { ARTICLES } from "./articles-seed";
 import { YRKES_ARTICLES } from "./articles-yrken-seed";
@@ -158,6 +158,16 @@ export async function seedDefaults(): Promise<void> {
         })
         // Backfill answerBlock on existing rows (idempotent for the rest).
         .onDuplicateKeyUpdate({ set: { answerBlock: a.answerBlock ?? null } });
+    }
+
+    // Ensure the admin account exists (no password yet; set on first login).
+    const adminEmail = (process.env.ADMIN_EMAIL || "info@bijoyiq.com").toLowerCase().trim();
+    await db.insert(adminUsers).values({ email: adminEmail }).onDuplicateKeyUpdate({ set: { email: adminEmail } });
+
+    // Ensure a single site_settings row exists for tracking config.
+    const existingSettings = await db.select().from(siteSettings).limit(1);
+    if (existingSettings.length === 0) {
+      await db.insert(siteSettings).values({});
     }
 
     seeded = true;
