@@ -142,3 +142,14 @@
 - [x] trust proxy + cookie-domän som extra härdning
 - [x] Verifierat live: admin-panelen laddar (Texter/FAQ/AI/Spårning), inloggning + 2FA fungerar
 - [x] Diagnostik borttagen
+
+
+## Admin: tjänststyrning + testläge (klart)
+- [x] Admin-flik "Tjänster": tända/släcka per tjänst + sätta pris
+- [x] Släckta tjänster döljs på publika sajten (listServices filtrerar active)
+- [x] 0 kr = testläge: hoppar över Stripe, låser upp direkt
+- [x] Åtkomstkod (site_settings.accessCode) krävs för 0 kr-läge; sätts i admin
+- [x] ServicePage: kod-prompt vid 0 kr, knapp/pris-text anpassad
+- [x] Verifierat live: fel kod nekas, rätt kod (testa2026) låser upp gratis, AI kör, resultat sparas
+- [x] Alla tjänster satta till 0 kr på VPS, accessCode=testa2026
+- [ ] Du: testa hela flödet i browsern; sätt sedan pris 49 + tänd för skarp försäljning
