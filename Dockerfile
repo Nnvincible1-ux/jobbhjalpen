@@ -1,10 +1,13 @@
 # CV-piloten production image (Node server, not static).
+# The bundled server (esbuild --packages=external) imports some packages that
+# live in devDependencies (e.g. vite), so the runtime image installs ALL
+# dependencies, not just prod ones. This keeps startup reliable.
 FROM node:22-slim AS base
 ENV NODE_ENV=production
 WORKDIR /app
 RUN npm install -g pnpm@10.4.1
 
-# Install deps (incl. dev for build) using the lockfile.
+# Build stage: full install + build.
 FROM base AS build
 ENV NODE_ENV=development
 COPY package.json pnpm-lock.yaml ./
@@ -13,11 +16,12 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm build
 
-# Runtime image: copy built app + production deps.
+# Runtime stage: full deps (incl. dev) so all imported packages resolve.
 FROM base AS runtime
+ENV NODE_ENV=production
 COPY package.json pnpm-lock.yaml ./
 COPY patches ./patches
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile
 COPY --from=build /app/dist ./dist
 COPY drizzle ./drizzle
 COPY scripts ./scripts
