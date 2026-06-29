@@ -56,3 +56,29 @@ export async function chat(model: string, messages: ChatMessage[]): Promise<stri
   };
   return data.choices?.[0]?.message?.content ?? "";
 }
+
+/** Chat completion that requests a JSON object response (OpenAI-compatible). */
+export async function chatJson(model: string, messages: ChatMessage[]): Promise<string> {
+  const c = await resolveConfig();
+  if (!c.apiKey) {
+    throw new Error("Ingen AI-nyckel konfigurerad. Ange den i adminverktyget under AI-inställningar.");
+  }
+  const res = await fetch(`${c.baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${c.apiKey}`,
+    },
+    body: JSON.stringify({ model, messages, response_format: { type: "json_object" } }),
+  });
+  if (!res.ok) {
+    // Some providers/models reject response_format; fall back to plain chat.
+    if (res.status === 400) return chat(model, messages);
+    const text = await res.text();
+    throw new Error(`AI-anrop misslyckades: ${res.status} ${res.statusText} ${text}`);
+  }
+  const data = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  return data.choices?.[0]?.message?.content ?? "";
+}

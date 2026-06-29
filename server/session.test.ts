@@ -1,9 +1,20 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 // Mock the AI engine so tests never call the LLM.
+const MOCK = {
+  matchScore: 72,
+  scoreLabel: "God match",
+  summary: ["punkt"],
+  gaps: [],
+  adaptedCv: "MOCK_RESULT",
+  coverLetter: "",
+  refusal: "",
+};
 vi.mock("./ai/engine", () => ({
-  runService: vi.fn(async () => "MOCK_RESULT"),
-  adjustService: vi.fn(async () => "MOCK_ADJUSTED"),
+  runService: vi.fn(async () => MOCK),
+  adjustService: vi.fn(async () => ({ ...MOCK, adaptedCv: "MOCK_ADJUSTED" })),
+  // Use the real validation semantics (concrete sentence required).
+  isMeaningfulFeedback: (f: string) => (f || "").trim().split(/\s+/).filter((w) => w.length > 1).length >= 3 && (f || "").trim().length >= 10,
 }));
 
 // In-memory DB mock covering the helpers the session router uses.
@@ -72,7 +83,8 @@ describe("session payment gate + adjustment rounds", () => {
     });
     const caller = appRouter.createCaller(publicCtx());
     const r = await caller.session.run({ id: "s2" });
-    expect(r.content).toBe("MOCK_RESULT");
+    expect(r.result.adaptedCv).toBe("MOCK_RESULT");
+    expect(r.result.matchScore).toBe(72);
   });
 
   it("decrements adjustment rounds and locks at zero", async () => {
@@ -86,10 +98,12 @@ describe("session payment gate + adjustment rounds", () => {
     state.messages.set("s3", [{ role: "assistant", content: "first" }]);
     const caller = appRouter.createCaller(publicCtx());
 
-    const r1 = await caller.session.adjust({ id: "s3", feedback: "mer formell" });
+    const r1 = await caller.session.adjust({ id: "s3", feedback: "Gör tonen mer formell och korta brevet." });
     expect(r1.remainingRounds).toBe(0);
     expect(r1.locked).toBe(true);
 
-    await expect(caller.session.adjust({ id: "s3", feedback: "igen" })).rejects.toThrow(/förbrukade/);
+    await expect(
+      caller.session.adjust({ id: "s3", feedback: "Lyft fram min ledarerfarenhet tydligare." })
+    ).rejects.toThrow(/förbrukade/);
   });
 });

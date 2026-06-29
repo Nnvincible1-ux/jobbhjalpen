@@ -42,7 +42,7 @@ import {
   updateSession,
   upsertFaq,
 } from "./db";
-import { adjustService, runService } from "./ai/engine";
+import { adjustService, isMeaningfulFeedback, runService } from "./ai/engine";
 
 export const appRouter = router({
   system: systemRouter,
@@ -109,7 +109,7 @@ export const appRouter = router({
 
     // Run the AI service. STRICT gate: only when paymentStatus === 'paid'.
     run: publicProcedure
-      .input(z.object({ id: z.string() }))
+      .input(z.object({ id: z.string(), additions: z.array(z.string()).optional() }))
       .mutation(async ({ input }) => {
         const s = await getSession(input.id);
         if (!s) throw new TRPCError({ code: "NOT_FOUND", message: "Session saknas." });
@@ -124,14 +124,15 @@ export const appRouter = router({
         if (!service) throw new TRPCError({ code: "NOT_FOUND", message: "Tjänst saknas." });
 
         await updateSession(input.id, { status: "processing" });
-        const content = await runService({
+        const result = await runService({
           promptKey: service.promptKey,
           documentText: s.inputText || "",
           annonsText: s.annonsText,
+          selectedAdditions: input.additions,
         });
-        await addMessage(input.id, "assistant", content);
+        await addMessage(input.id, "assistant", JSON.stringify(result));
         await updateSession(input.id, { status: "completed" });
-        return { content };
+        return { result };
       }),
 
     // Adjustment round. Decrements remainingRounds in the DB. Locks at 0.
@@ -151,22 +152,30 @@ export const appRouter = router({
           throw new TRPCError({ code: "FORBIDDEN", message: "Dina justeringsförsök är förbrukade." });
         }
 
+        // Reject meaningless comments WITHOUT spending a round.
+        if (!isMeaningfulFeedback(input.feedback)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Skriv en konkret önskan (minst en mening) om vad du vill justera, så att vi kan göra en vettig ändring.",
+          });
+        }
+
         const history = (await getMessages(input.id)).map((m) => ({ role: m.role, content: m.content }));
         await addMessage(input.id, "user", input.feedback);
-        const content = await adjustService({
+        const result = await adjustService({
           promptKey: service.promptKey,
           history,
           documentText: s.inputText || "",
           annonsText: s.annonsText,
           feedback: input.feedback,
         });
-        await addMessage(input.id, "assistant", content);
+        await addMessage(input.id, "assistant", JSON.stringify(result));
         const remaining = s.remainingRounds - 1;
         await updateSession(input.id, {
           remainingRounds: remaining,
           status: remaining <= 0 ? "locked" : "completed",
         });
-        return { content, remainingRounds: remaining, locked: remaining <= 0 };
+        return { result, remainingRounds: remaining, locked: remaining <= 0 };
       }),
   }),
 

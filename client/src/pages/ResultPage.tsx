@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "wouter";
 import { trackPurchase } from "@/lib/tracking";
-import { Streamdown } from "streamdown";
 import { ArrowLeft, Loader2, Lock, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
+import ResultMatchView, { parseResult } from "@/components/ResultMatchView";
+
+const MAX_ROUNDS = 3;
 
 export default function ResultPage() {
   const { id } = useParams<{ id: string }>();
@@ -73,10 +75,51 @@ export default function ResultPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
-  const sendAdjust = () => {
-    if (!feedback.trim()) return;
+  // The latest assistant message is the current result.
+  const assistantMsgs = useMemo(
+    () => session?.messages.filter((m) => m.role === "assistant") ?? [],
+    [session]
+  );
+  const latest = assistantMsgs[assistantMsgs.length - 1];
+  const result = useMemo(() => (latest ? parseResult(latest.content) : null), [latest]);
+
+  const isPaid = session?.paymentStatus === "paid";
+  const loading = confirming || sessionQuery.isLoading;
+  const working = runMutation.isPending || (isPaid && assistantMsgs.length === 0);
+  const adjusting = adjustMutation.isPending;
+  const usedRounds = session ? MAX_ROUNDS - session.remainingRounds : 0;
+
+  // "Add suggestions" goes through the adjustment channel so it re-generates the
+  // documents (run() is idempotent once a result exists).
+  const applyViaAdjust = (additions: string[]) => {
+    if (additions.length === 0) return;
+    if (session && session.remainingRounds <= 0) {
+      toast.info("Dina justeringsrundor är slut, men förslagen finns kvar att lägga till manuellt.");
+      return;
+    }
+    const text =
+      "Lägg in följande som jag bekräftar stämmer, och uppdatera CV och brev därefter: " +
+      additions.join("; ");
     adjustMutation.mutate(
-      { id, feedback },
+      { id, feedback: text },
+      {
+        onSuccess: (r) => {
+          utils.session.get.invalidate({ id });
+          if (r.locked) toast.info("Dina justeringsförsök är nu förbrukade.");
+        },
+        onError: (e) => toast.error(e.message),
+      }
+    );
+  };
+
+  const sendAdjust = () => {
+    const t = feedback.trim();
+    if (t.length < 10 || t.split(/\s+/).filter((w) => w.length > 1).length < 3) {
+      toast.error("Skriv en konkret mening om vad du vill ändra, annars kan vi inte göra en vettig justering.");
+      return;
+    }
+    adjustMutation.mutate(
+      { id, feedback: t },
       {
         onSuccess: (r) => {
           setFeedback("");
@@ -88,25 +131,13 @@ export default function ResultPage() {
     );
   };
 
-  const loading = confirming || sessionQuery.isLoading;
-  const isPaid = session?.paymentStatus === "paid";
-  const demo = isPaid && sessionQuery.data?.paymentStatus === "paid" && new URLSearchParams(window.location.search).get("demo") === "1";
-  const assistantMsgs = session?.messages.filter((m) => m.role === "assistant") ?? [];
-  const working = runMutation.isPending || (isPaid && assistantMsgs.length === 0);
-
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <div className="container py-12 md:py-16">
+      <div className="container py-10 md:py-14">
         <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Till startsidan
         </Link>
-
-        {demo && (
-          <div className="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-            Demoläge: betalningen är simulerad. I skarp drift låses resultatet upp först efter bekräftad Stripe-betalning.
-          </div>
-        )}
 
         {loading ? (
           <div className="mt-16 grid place-items-center">
@@ -123,55 +154,59 @@ export default function ResultPage() {
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_0.85fr]">
+          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
+            {/* Main result column */}
             <div className="space-y-6">
-              <h1 className="font-display text-3xl font-semibold">Ditt resultat</h1>
-              {working ? (
+              <h1 className="font-display text-2xl font-semibold sm:text-3xl">Ditt resultat</h1>
+              {working || adjusting ? (
                 <div className="rounded-2xl border bg-card p-8 text-center shadow-sm">
                   <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                   <p className="mt-3 text-sm text-muted-foreground">
-                    Vi arbetar med ditt underlag. Detta tar oftast under en minut.
+                    Vi arbetar med ditt underlag. Det tar oftast under en minut.
                   </p>
                 </div>
+              ) : result ? (
+                <ResultMatchView result={result} onApplyAdditions={applyViaAdjust} applying={adjusting} />
               ) : (
-                assistantMsgs.map((m, i) => (
-                  <div key={i} className="rounded-2xl border bg-card p-6 shadow-sm">
-                    {i > 0 && (
-                      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Justering {i}
-                      </p>
-                    )}
-                    <article className="prose prose-sm max-w-none prose-headings:font-display">
-                      <Streamdown>{m.content}</Streamdown>
-                    </article>
-                  </div>
-                ))
+                <p className="text-muted-foreground">Inget resultat ännu.</p>
               )}
             </div>
 
             {/* Adjustment panel */}
             <aside className="lg:sticky lg:top-24 lg:self-start">
-              <div className="rounded-2xl border bg-card p-6 shadow-sm">
-                <h2 className="font-display text-lg font-semibold">Justeringar</h2>
+              <div className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-display text-lg font-semibold">Justeringar</h2>
+                  <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
+                    {usedRounds}/{MAX_ROUNDS} använda
+                  </span>
+                </div>
+
+                {/* Round dots */}
+                <div className="mt-3 flex gap-1.5">
+                  {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-1.5 flex-1 rounded-full ${i < usedRounds ? "bg-foreground/70" : "bg-secondary"}`}
+                    />
+                  ))}
+                </div>
+
                 {session.remainingRounds > 0 ? (
                   <>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-3 text-sm text-muted-foreground">
                       Du har {session.remainingRounds} justeringsrunda
-                      {session.remainingRounds === 1 ? "" : "r"} kvar.
+                      {session.remainingRounds === 1 ? "" : "r"} kvar. Beskriv konkret vad du vill ändra.
                     </p>
                     <Textarea
                       value={feedback}
                       onChange={(e) => setFeedback(e.target.value)}
-                      placeholder="Vad vill du ändra? T.ex. 'Gör tonen mer formell.'"
-                      className="mt-4 min-h-28"
-                      disabled={adjustMutation.isPending || working}
+                      placeholder="T.ex. 'Lyft fram min erfarenhet av förändringsledning tydligare och gör tonen lite mer formell.'"
+                      className="mt-3 min-h-28"
+                      disabled={adjusting || working}
                     />
-                    <Button
-                      onClick={sendAdjust}
-                      disabled={adjustMutation.isPending || working || !feedback.trim()}
-                      className="mt-3 w-full"
-                    >
-                      {adjustMutation.isPending ? (
+                    <Button onClick={sendAdjust} disabled={adjusting || working || !feedback.trim()} className="mt-3 w-full">
+                      {adjusting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Justerar...
                         </>
@@ -181,19 +216,17 @@ export default function ResultPage() {
                         </>
                       )}
                     </Button>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Tomma eller otydliga kommentarer förbrukar ingen runda.
+                    </p>
                   </>
-                ) : session.status === "locked" ? (
+                ) : (
                   <div className="mt-4 flex items-start gap-2 rounded-lg bg-secondary/60 p-3 text-sm">
                     <Lock className="mt-0.5 h-4 w-4 shrink-0" />
                     <span>
-                      Dina justeringsförsök är förbrukade. Hoppas du är nöjd med resultatet! För en ny
-                      omgång, starta en ny beställning.
+                      Dina {MAX_ROUNDS} justeringsrundor är förbrukade. För fler justeringar, starta en ny beställning.
                     </span>
                   </div>
-                ) : (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Den här tjänsten levereras som ett färdigt resultat utan justeringsrundor.
-                  </p>
                 )}
               </div>
             </aside>
