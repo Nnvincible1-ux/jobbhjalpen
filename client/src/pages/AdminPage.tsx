@@ -13,10 +13,32 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin-auth/me", { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => setAuthed(Boolean(d?.authenticated)))
-      .catch(() => setAuthed(false));
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    (async () => {
+      try {
+        const r = await fetch("/api/admin-auth/me", {
+          credentials: "include",
+          cache: "no-store",
+          signal: ctrl.signal,
+        });
+        if (!r.ok) {
+          setAuthed(false);
+          return;
+        }
+        const d = await r.json().catch(() => ({}));
+        setAuthed(Boolean(d?.authenticated));
+      } catch {
+        // Network error or timeout: fall back to the login screen, never spin forever.
+        setAuthed(false);
+      } finally {
+        clearTimeout(timer);
+      }
+    })();
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
   }, []);
 
   if (authed === null) {

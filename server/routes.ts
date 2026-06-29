@@ -260,6 +260,8 @@ export function registerCustomRoutes(app: Express) {
     }
   }
 
+  const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
+
   function setSessionCookie(res: Response, token: string, expiresAt: Date) {
     res.cookie(ADMIN_COOKIE, token, {
       httpOnly: true,
@@ -267,6 +269,7 @@ export function registerCustomRoutes(app: Express) {
       sameSite: "lax",
       expires: expiresAt,
       path: "/",
+      domain: cookieDomain,
     });
   }
 
@@ -350,7 +353,7 @@ export function registerCustomRoutes(app: Express) {
   adminRouter.post("/logout", async (req: Request, res: Response) => {
     const token = readAdminToken(req);
     await destroyAdminSession(token);
-    res.clearCookie(ADMIN_COOKIE, { path: "/" });
+    res.clearCookie(ADMIN_COOKIE, { path: "/", domain: cookieDomain });
     res.json({ ok: true });
   });
 

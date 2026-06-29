@@ -32,6 +32,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 
 async function startServer() {
   const app = express();
+  // Behind Coolify/Traefik reverse proxy: trust X-Forwarded-* so secure cookies
+  // and protocol detection work correctly.
+  app.set("trust proxy", 1);
   const server = createServer(app);
   // Custom routes FIRST: the Stripe webhook needs the raw body, so it must be
   // registered before the global express.json() parser consumes the stream.
