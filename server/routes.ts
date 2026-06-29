@@ -251,6 +251,9 @@ export function registerCustomRoutes(app: Express) {
   adminRouter.use(express.json({ limit: "1mb" }));
 
   function readAdminToken(req: Request): string | undefined {
+    // Prefer Authorization: Bearer <token>, fall back to cookie.
+    const auth = req.headers.authorization;
+    if (auth && auth.startsWith("Bearer ")) return auth.slice(7).trim();
     const header = req.headers.cookie;
     if (!header) return undefined;
     try {
@@ -326,7 +329,7 @@ export function registerCustomRoutes(app: Express) {
     if (!admin) return res.status(404).json({ error: "Konto saknas." });
     const sess = await createAdminSession(admin.id, remember);
     setSessionCookie(res, sess.token, sess.expiresAt);
-    res.json({ ok: true });
+    res.json({ ok: true, token: sess.token });
   });
 
   // Login step 2: verify TOTP for an existing 2FA user, then create session.
@@ -339,7 +342,7 @@ export function registerCustomRoutes(app: Express) {
     if (!ok) return res.status(401).json({ error: "Fel kod. Försök igen." });
     const sess = await createAdminSession(userId, remember);
     setSessionCookie(res, sess.token, sess.expiresAt);
-    res.json({ ok: true });
+    res.json({ ok: true, token: sess.token });
   });
 
   // Who am I (used by the admin UI to gate access).

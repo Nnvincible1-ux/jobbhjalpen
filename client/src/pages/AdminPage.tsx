@@ -17,10 +17,12 @@ export default function AdminPage() {
     const timer = setTimeout(() => ctrl.abort(), 8000);
     (async () => {
       try {
+        const tok = localStorage.getItem("cvp_admin_token");
         const r = await fetch("/api/admin-auth/me", {
           credentials: "include",
           cache: "no-store",
           signal: ctrl.signal,
+          headers: tok ? { authorization: `Bearer ${tok}` } : undefined,
         });
         if (!r.ok) {
           setAuthed(false);
@@ -57,7 +59,13 @@ export default function AdminPage() {
 }
 
 async function adminLogout() {
-  await fetch("/api/admin-auth/logout", { method: "POST", credentials: "include" }).catch(() => {});
+  const tok = localStorage.getItem("cvp_admin_token");
+  await fetch("/api/admin-auth/logout", {
+    method: "POST",
+    credentials: "include",
+    headers: tok ? { authorization: `Bearer ${tok}` } : undefined,
+  }).catch(() => {});
+  localStorage.removeItem("cvp_admin_token");
 }
 
 function AdminPanel({ onLogout }: { onLogout: () => void }) {

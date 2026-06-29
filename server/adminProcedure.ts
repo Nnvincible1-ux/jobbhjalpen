@@ -12,13 +12,17 @@ import { ADMIN_COOKIE, getAdminBySession } from "./adminAuth";
 
 export const adminProcedure = publicProcedure.use(async (opts) => {
   const { ctx, next } = opts;
-  const header = ctx.req?.headers?.cookie;
-  const token = header ? parseCookie(header)[ADMIN_COOKIE] : undefined;
+  // Prefer Authorization: Bearer <token> (immune to reverse-proxy cookie issues),
+  // fall back to the cvp_admin cookie for backward compatibility.
+  const authHeader = ctx.req?.headers?.authorization;
+  let token: string | undefined;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.slice(7).trim();
+  } else {
+    const cookieHeader = ctx.req?.headers?.cookie;
+    token = cookieHeader ? parseCookie(cookieHeader)[ADMIN_COOKIE] : undefined;
+  }
   const admin = await getAdminBySession(token);
-  // Temporary diagnostics to trace why an existing valid session is rejected.
-  console.log(
-    `[adminProcedure] hasHeader=${Boolean(header)} hasToken=${Boolean(token)} tokenLen=${token?.length ?? 0} adminFound=${Boolean(admin)}`
-  );
   if (!admin) {
     throw new TRPCError({ code: "FORBIDDEN", message: "Admin-inloggning krävs." });
   }

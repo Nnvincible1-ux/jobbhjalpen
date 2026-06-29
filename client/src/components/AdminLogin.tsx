@@ -107,6 +107,7 @@ export default function AdminLogin({ onAuthed }: { onAuthed: () => void }) {
     try {
       const r = await api("enroll-verify", { email, code, remember });
       if (!r.ok) return toast.error(r.data?.error || "Fel kod.");
+      if (r.data?.token) localStorage.setItem("cvp_admin_token", r.data.token);
       toast.success("Tvåfaktor aktiverad.");
       onAuthed();
     } finally {
@@ -119,6 +120,7 @@ export default function AdminLogin({ onAuthed }: { onAuthed: () => void }) {
     try {
       const r = await api("totp", { userId, code, remember });
       if (!r.ok) return toast.error(r.data?.error || "Fel kod.");
+      if (r.data?.token) localStorage.setItem("cvp_admin_token", r.data.token);
       onAuthed();
     } finally {
       setBusy(false);

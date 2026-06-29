@@ -42,6 +42,11 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
+      headers() {
+        const tok =
+          typeof window !== "undefined" ? localStorage.getItem("cvp_admin_token") : null;
+        return tok ? { authorization: `Bearer ${tok}` } : {};
+      },
       fetch(input, init) {
         return globalThis.fetch(input, {
           ...(init ?? {}),
