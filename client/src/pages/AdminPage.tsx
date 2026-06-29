@@ -13,25 +13,26 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
+    const tok = localStorage.getItem("cvp_admin_token");
+    // No token at all -> show login immediately, never call /me or any admin query.
+    if (!tok) {
+      setAuthed(false);
+      return;
+    }
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 8000);
     (async () => {
       try {
-        const tok = localStorage.getItem("cvp_admin_token");
         const r = await fetch("/api/admin-auth/me", {
-          credentials: "include",
           cache: "no-store",
           signal: ctrl.signal,
-          headers: tok ? { authorization: `Bearer ${tok}` } : undefined,
+          headers: { authorization: `Bearer ${tok}` },
         });
-        if (!r.ok) {
-          setAuthed(false);
-          return;
-        }
-        const d = await r.json().catch(() => ({}));
-        setAuthed(Boolean(d?.authenticated));
+        const d = r.ok ? await r.json().catch(() => ({})) : {};
+        const ok = Boolean(d?.authenticated);
+        if (!ok) localStorage.removeItem("cvp_admin_token");
+        setAuthed(ok);
       } catch {
-        // Network error or timeout: fall back to the login screen, never spin forever.
         setAuthed(false);
       } finally {
         clearTimeout(timer);
@@ -70,7 +71,9 @@ async function adminLogout() {
 
 function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const utils = trpc.useUtils();
-  const { data, isLoading } = trpc.cms.all.useQuery();
+  // Only query when an admin token exists, so it can never fire unauthenticated.
+  const hasToken = typeof window !== "undefined" && !!localStorage.getItem("cvp_admin_token");
+  const { data, isLoading } = trpc.cms.all.useQuery(undefined, { enabled: hasToken, retry: false });
   const saveText = trpc.cms.saveText.useMutation();
   const saveFaq = trpc.cms.saveFaq.useMutation();
   const deleteFaq = trpc.cms.deleteFaq.useMutation();
