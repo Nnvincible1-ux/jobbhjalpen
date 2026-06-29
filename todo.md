@@ -115,3 +115,19 @@
 - [ ] GA4/analytics-spårning (valfritt, samma mönster)
 - [ ] GDPR: spårning laddas först efter cookie-samtycke (koppla till befintlig CookieConsent)
 - [ ] Verifiera i Meta Events Manager att events tas emot
+
+
+## Admin-inloggning & 2FA (klart)
+- [x] Fristående admin-konto (info@bijoyiq.com), bcrypt-lösenord
+- [x] TOTP-2FA (otpauth) med QR-enrollment + verifiering vid login
+- [x] "Kom ihåg mig" 30 dagars session (httpOnly-cookie), brute-force-lockout
+- [x] /admin skyddat: visar login tills autentiserad, logga ut-knapp
+- [x] Vitest för TOTP-logik (30/30 totalt)
+
+## Tracking & retargeting (klart i kod)
+- [x] FB Pixel + GA4-ID konfigureras i admin (Spårning-flik), inget hårdkodat
+- [x] GDPR: laddas först efter cookie-samtycke (cookie-consent-accepted-event)
+- [x] Standardhändelser: PageView (ruttbyte), Purchase (betald session). ViewContent/InitiateCheckout-helpers finns
+- [x] Publik endpoint /api/public/tracking levererar ID:n till frontend
+- [ ] Du: fyll i Facebook Pixel-ID (och ev. GA4) i admin → Spårning
+- [ ] Verifiera i Meta Events Manager efter att ID lagts in
