@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
+import { initTracking, trackPageView } from "@/lib/tracking";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { CmsProvider } from "./contexts/CmsContext";
@@ -18,6 +20,10 @@ import GuidePage from "./pages/GuidePage";
 import About from "./pages/About";
 
 function Router() {
+  const [location] = useLocation();
+  useEffect(() => {
+    trackPageView();
+  }, [location]);
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -36,6 +42,9 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    initTracking();
+  }, []);
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">

@@ -107,3 +107,11 @@
 - [x] Article-schema använder answerBlock som description
 - [x] sitemap inkluderar alla 49 URL:er, bas cvpiloten.se
 - [x] 28/28 tester passerar
+
+## Tracking & retargeting (tillagt)
+- [ ] Facebook Pixel: ladda pixel-script + PageView vid sidvisning/SPA-navigering
+- [ ] Pixel-ID konfigurerbart (admin/CMS eller env), inget hårdkodat
+- [ ] Standardhändelser: PageView, ViewContent (tjänstesida), InitiateCheckout, Purchase (efter betald session)
+- [ ] GA4/analytics-spårning (valfritt, samma mönster)
+- [ ] GDPR: spårning laddas först efter cookie-samtycke (koppla till befintlig CookieConsent)
+- [ ] Verifiera i Meta Events Manager att events tas emot

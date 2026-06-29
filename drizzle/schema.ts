@@ -258,3 +258,36 @@ export const aiSettings = mysqlTable("ai_settings", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type AiSettings = typeof aiSettings.$inferSelect;
+
+
+/** Standalone admin accounts (email/password + TOTP 2FA) for VPS deployment. */
+export const adminUsers = mysqlTable("admin_users", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  passwordHash: varchar("passwordHash", { length: 255 }),
+  totpSecret: varchar("totpSecret", { length: 255 }),
+  totpEnabled: boolean("totpEnabled").default(false).notNull(),
+  failedAttempts: int("failedAttempts").default(0).notNull(),
+  lockedUntil: timestamp("lockedUntil"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AdminUser = typeof adminUsers.$inferSelect;
+
+/** Admin sessions (remember-me up to 30 days), token stored in httpOnly cookie. */
+export const adminSessions = mysqlTable("admin_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  adminUserId: int("adminUserId").notNull(),
+  token: varchar("token", { length: 128 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+/** Site-wide settings editable from admin (tracking pixels). Single row. */
+export const siteSettings = mysqlTable("site_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  fbPixelId: varchar("fbPixelId", { length: 64 }),
+  ga4Id: varchar("ga4Id", { length: 64 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SiteSettings = typeof siteSettings.$inferSelect;

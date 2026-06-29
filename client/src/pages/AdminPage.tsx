@@ -1,20 +1,25 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { ExternalLink, Loader2, LogIn, Rocket, Save, Trash2 } from "lucide-react";
+import { ExternalLink, Loader2, Rocket, Save, Trash2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
+import AdminLogin from "@/components/AdminLogin";
 
 export default function AdminPage() {
-  const { user, loading, isAuthenticated } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const [authed, setAuthed] = useState<boolean | null>(null);
 
-  if (loading) {
+  useEffect(() => {
+    fetch("/api/admin-auth/me", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setAuthed(Boolean(d?.authenticated)))
+      .catch(() => setAuthed(false));
+  }, []);
+
+  if (authed === null) {
     return (
       <div className="grid min-h-screen place-items-center">
         <Loader2 className="h-6 w-6 animate-spin" />
@@ -22,39 +27,18 @@ export default function AdminPage() {
     );
   }
 
-  if (!isAuthenticated || !isAdmin) {
-    return (
-      <div className="grid min-h-screen place-items-center px-4">
-        <div className="max-w-md text-center">
-          <h1 className="font-display text-2xl font-semibold">Adminpanel</h1>
-          <p className="mt-3 text-muted-foreground">
-            {isAuthenticated
-              ? "Ditt konto saknar adminbehörighet."
-              : "Logga in med ditt adminkonto för att hantera innehållet."}
-          </p>
-          {!isAuthenticated && (
-            <a
-              href={getLoginUrl()}
-              className="mt-6 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white"
-              style={{ background: "var(--brand-primary)" }}
-            >
-              <LogIn className="h-4 w-4" /> Logga in
-            </a>
-          )}
-          <div className="mt-6">
-            <Link href="/" className="text-sm underline">
-              Till startsidan
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
+  if (!authed) {
+    return <AdminLogin onAuthed={() => setAuthed(true)} />;
   }
 
-  return <AdminPanel />;
+  return <AdminPanel onLogout={() => setAuthed(false)} />;
 }
 
-function AdminPanel() {
+async function adminLogout() {
+  await fetch("/api/admin-auth/logout", { method: "POST", credentials: "include" }).catch(() => {});
+}
+
+function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const utils = trpc.useUtils();
   const { data, isLoading } = trpc.cms.all.useQuery();
   const saveText = trpc.cms.saveText.useMutation();
@@ -129,6 +113,15 @@ function AdminPanel() {
               )}
               Publicera
             </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await adminLogout();
+                onLogout();
+              }}
+            >
+              <LogOut className="mr-2 h-4 w-4" /> Logga ut
+            </Button>
           </div>
         </div>
       </header>
@@ -139,6 +132,7 @@ function AdminPanel() {
             <TabsTrigger value="texts">Texter</TabsTrigger>
             <TabsTrigger value="faq">FAQ</TabsTrigger>
             <TabsTrigger value="ai">AI</TabsTrigger>
+            <TabsTrigger value="tracking">Spårning</TabsTrigger>
           </TabsList>
 
           <TabsContent value="texts" className="mt-6 space-y-8">
@@ -209,6 +203,10 @@ function AdminPanel() {
 
           <TabsContent value="ai" className="mt-6">
             <AiSettingsPanel />
+          </TabsContent>
+
+          <TabsContent value="tracking" className="mt-6">
+            <TrackingPanel />
           </TabsContent>
         </Tabs>
       </main>
@@ -370,6 +368,72 @@ function AiSettingsPanel() {
 // Tiny helper to run an effect-like init without importing useEffect separately.
 function useMemoInit(fn: () => void, deps: unknown[]) {
   useMemo(fn, deps);
+}
+
+function TrackingPanel() {
+  const { data, isLoading } = trpc.tracking.get.useQuery();
+  const utils = trpc.useUtils();
+  const save = trpc.tracking.save.useMutation();
+  const [fbPixelId, setFbPixelId] = useState("");
+  const [ga4Id, setGa4Id] = useState("");
+  const [loaded, setLoaded] = useState(false);
+
+  useMemoInit(() => {
+    if (data && !loaded) {
+      setFbPixelId(data.fbPixelId);
+      setGa4Id(data.ga4Id);
+      setLoaded(true);
+    }
+  }, [data, loaded]);
+
+  if (isLoading) {
+    return (
+      <div className="grid place-items-center py-12">
+        <Loader2 className="h-5 w-5 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl space-y-5 rounded-2xl border bg-card p-6">
+      <div>
+        <h2 className="font-display text-lg font-semibold">Spårning &amp; retargeting</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Lägg in dina ID:n nedan. Spårning laddas först efter att besökaren accepterat cookies (GDPR).
+        </p>
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">Facebook Pixel-ID</label>
+        <Input className="mt-1" placeholder="t.ex. 1234567890123456" value={fbPixelId} onChange={(e) => setFbPixelId(e.target.value)} />
+        <p className="mt-1 text-xs text-muted-foreground">Hittas i Meta Events Manager → Datakällor.</p>
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">Google Analytics 4-ID (valfritt)</label>
+        <Input className="mt-1" placeholder="t.ex. G-XXXXXXXXXX" value={ga4Id} onChange={(e) => setGa4Id(e.target.value)} />
+      </div>
+
+      <Button
+        onClick={() =>
+          save.mutate(
+            { fbPixelId, ga4Id },
+            {
+              onSuccess: () => {
+                toast.success("Spårning sparad. Laddas för besökare efter cookie-samtycke.");
+                utils.tracking.get.invalidate();
+              },
+              onError: (e) => toast.error(e.message),
+            }
+          )
+        }
+        disabled={save.isPending}
+      >
+        {save.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+        Spara spårning
+      </Button>
+    </div>
+  );
 }
 
 function TextRow(props: {

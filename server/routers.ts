@@ -19,6 +19,8 @@ import {
   createSession,
   getAiSettings,
   updateAiSettings,
+  getSiteSettings,
+  updateSiteSettings,
   getArticleBySlug,
   getServiceBySlug,
   getSession,
@@ -251,6 +253,23 @@ export const appRouter = router({
         };
         if (input.apiKey && input.apiKey.trim().length > 0) patch.apiKey = input.apiKey.trim();
         await updateAiSettings(patch);
+        return { ok: true };
+      }),
+  }),
+
+  /* --------------------------- Tracking (admin) ------------------------- */
+  tracking: router({
+    get: adminProcedure.query(async () => {
+      const s = await getSiteSettings();
+      return { fbPixelId: s?.fbPixelId ?? "", ga4Id: s?.ga4Id ?? "" };
+    }),
+    save: adminProcedure
+      .input(z.object({ fbPixelId: z.string(), ga4Id: z.string() }))
+      .mutation(async ({ input }) => {
+        await updateSiteSettings({
+          fbPixelId: input.fbPixelId.trim() || null,
+          ga4Id: input.ga4Id.trim() || null,
+        });
         return { ok: true };
       }),
   }),

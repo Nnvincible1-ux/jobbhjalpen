@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "wouter";
+import { trackPurchase } from "@/lib/tracking";
 import { Streamdown } from "streamdown";
 import { ArrowLeft, Loader2, Lock, Send } from "lucide-react";
 import { toast } from "sonner";
@@ -47,10 +48,15 @@ export default function ResultPage() {
   }, [id]);
 
   // Once the server reports the session is paid, run the service exactly once.
+  const purchaseTrackedRef = useRef(false);
   useEffect(() => {
     if (!session || ranRef.current) return;
     const isPaid = session.paymentStatus === "paid";
     const hasResult = session.messages.length > 0;
+    if (isPaid && !purchaseTrackedRef.current) {
+      purchaseTrackedRef.current = true;
+      trackPurchase(session.serviceSlug ?? "tjanst", 49);
+    }
     if (isPaid && !hasResult && !runMutation.isPending) {
       ranRef.current = true;
       runMutation.mutate(
