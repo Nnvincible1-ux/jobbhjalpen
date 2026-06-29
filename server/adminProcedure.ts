@@ -23,6 +23,9 @@ export const adminProcedure = publicProcedure.use(async (opts) => {
     token = cookieHeader ? parseCookie(cookieHeader)[ADMIN_COOKIE] : undefined;
   }
   const admin = await getAdminBySession(token);
+  console.log(
+    `[adminProcedure] authHeader=${Boolean(authHeader)} cookie=${Boolean(ctx.req?.headers?.cookie)} tokenLen=${token?.length ?? 0} adminFound=${Boolean(admin)}`
+  );
   if (!admin) {
     throw new TRPCError({ code: "FORBIDDEN", message: "Admin-inloggning krävs." });
   }
