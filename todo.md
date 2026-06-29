@@ -131,3 +131,14 @@
 - [x] Publik endpoint /api/public/tracking levererar ID:n till frontend
 - [ ] Du: fyll i Facebook Pixel-ID (och ev. GA4) i admin → Spårning
 - [ ] Verifiera i Meta Events Manager efter att ID lagts in
+
+
+## Admin-login fix (bearer-token)
+- [x] Roten hittad: CMS/AI/tracking-rutter använde fortfarande Manus-OAuth adminProcedure (403)
+- [x] Egen cmsAdminProcedure validerar admin-session via Authorization: Bearer
+- [x] Alla admin-rutter (cms/ai/tracking) bytta till cmsAdminProcedure
+- [x] Frontend: token i localStorage, skickas i /me och tRPC-header
+- [x] Robust gate: login visas direkt utan token, ingen evig spinner
+- [x] trust proxy + cookie-domän som extra härdning
+- [x] Verifierat live: admin-panelen laddar (Texter/FAQ/AI/Spårning), inloggning + 2FA fungerar
+- [x] Diagnostik borttagen
