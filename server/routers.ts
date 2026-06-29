@@ -5,6 +5,7 @@ import { TRPCError } from "@trpc/server";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { adminProcedure as cmsAdminProcedure } from "./adminProcedure";
 import {
   addMessage,
   createParticipant,
@@ -234,7 +235,7 @@ export const appRouter = router({
         hasApiKey: Boolean(s?.apiKey && s.apiKey.length > 0),
       };
     }),
-    save: adminProcedure
+    save: cmsAdminProcedure
       .input(
         z.object({
           provider: z.string().min(1),
