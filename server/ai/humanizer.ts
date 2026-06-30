@@ -13,9 +13,18 @@ Skriv som en människa, på naturlig och enkel svenska.
 - Behåll allt sakinnehåll. Ändra bara språket, inte fakta eller struktur.
 `.trim();
 
+// Phrases a humanizer model sometimes prepends; we never want them in output.
+const META_PREAMBLE =
+  /^\s*(här (är|kommer)|nedan (är|följer)|självklart|absolut|visst|okej|ok|sure|here(?:'s| is)|certainly)\b[^\n]*?(:|\.)\s*(\n+|$)/i;
+
 // Deterministic final pass. No AI call. Catches anything that slipped through.
 export function stripAiTells(text: string): string {
-  return text
+  let out = text.trimStart();
+  // Strip a leading meta-preamble line (e.g. "Här är texten omskriven ...:").
+  if (META_PREAMBLE.test(out)) {
+    out = out.replace(META_PREAMBLE, "").trimStart();
+  }
+  return out
     // spaced em/en dash used as an aside -> comma
     .replace(/\s+[—–]\s+/g, ", ")
     // any remaining em/en dash -> comma

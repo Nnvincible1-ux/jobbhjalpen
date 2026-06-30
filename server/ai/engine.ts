@@ -124,7 +124,8 @@ async function humanize(text: string, promptKey: string): Promise<string> {
       const polished = await chat(humanizer, [
         {
           role: "system",
-          content: `Du redigerar text så att den låter mänsklig. Ändra inte innehåll, fakta eller struktur, bara språket.\n${HUMANIZER_RULES}`,
+          content: `Du redigerar text så att den låter mänsklig. Ändra inte innehåll, fakta eller struktur, bara språket.
+Svara ENDAST med den redigerade texten. Lägg ALDRIG till inledning, kommentar, förklaring eller meningar som "Här är texten ...". Börja direkt med innehållet.\n${HUMANIZER_RULES}`,
         },
         { role: "user", content: text },
       ]);
