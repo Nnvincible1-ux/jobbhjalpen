@@ -21,7 +21,7 @@ type ServiceSeed = {
 };
 
 const SERVICES: ServiceSeed[] = [
-  { slug: "cv-anpassning", category: "job", promptKey: "cv_anpassning", hasAdjustments: false, maxRounds: 0, acceptsAnnons: true, sortOrder: 1 },
+  { slug: "cv-anpassning", category: "job", promptKey: "cv_anpassning", hasAdjustments: true, maxRounds: 3, acceptsAnnons: true, sortOrder: 1 },
   { slug: "linkedin-makeover", category: "job", promptKey: "linkedin_makeover", hasAdjustments: true, maxRounds: 3, acceptsAnnons: false, sortOrder: 2 },
   { slug: "cv-granskning", category: "job", promptKey: "cv_granskning", hasAdjustments: true, maxRounds: 3, acceptsAnnons: false, sortOrder: 3 },
   { slug: "intervju", category: "job", promptKey: "intervju", hasAdjustments: false, maxRounds: 0, acceptsAnnons: true, sortOrder: 4 },
