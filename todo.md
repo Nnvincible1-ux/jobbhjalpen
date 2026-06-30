@@ -153,3 +153,15 @@
 - [x] Verifierat live: fel kod nekas, rätt kod (testa2026) låser upp gratis, AI kör, resultat sparas
 - [x] Alla tjänster satta till 0 kr på VPS, accessCode=testa2026
 - [ ] Du: testa hela flödet i browsern; sätt sedan pris 49 + tänd för skarp försäljning
+
+
+## Resultatflöde-ombyggnad (CRO/UX) — klart
+- [x] AI returnerar strukturerad JSON (matchScore, scoreLabel, summary, gaps, adaptedCv, coverLetter, refusal)
+- [x] Matchningssammanfattning + score visas FÖRST (score-ring + "Så matchade vi")
+- [x] Förbättringsförslag (gaps) med checkbox: lägg till valda / lägg till alla → kör om sanningsenligt
+- [x] Modellen hittar aldrig på; förslag måste bekräftas av användaren
+- [x] CV och brev i egna kort med PDF-nedladdning (print-to-PDF), mobile-first layout
+- [x] Justeringspanel: räknare X/3 + prickar, kommentar-spärr (meningslösa kommentarer förbrukar ingen runda)
+- [x] Saklig ton (tog bort "Kul att du hörde av dig")
+- [x] cv-anpassning fick 3 justeringsrundor (DB + seed)
+- [x] 32/32 vitest pass; verifierat live på cvpiloten.se
