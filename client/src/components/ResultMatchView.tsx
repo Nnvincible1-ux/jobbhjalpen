@@ -1,7 +1,35 @@
 import { useMemo, useState } from "react";
 import { Streamdown } from "streamdown";
-import { Check, Download, FileText, Loader2, Plus, Sparkles } from "lucide-react";
+import { Check, Copy, Download, FileText, Loader2, Plus, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+
+/** Split markdown into sections on level-2 headings (## ) for per-section copy. */
+function splitSections(markdown: string): { title: string; body: string }[] {
+  const lines = markdown.split(/\r?\n/);
+  const sections: { title: string; body: string }[] = [];
+  let current: { title: string; body: string } | null = null;
+  for (const line of lines) {
+    const m = line.match(/^\s{0,3}##\s+(.*)$/);
+    if (m) {
+      if (current) sections.push(current);
+      current = { title: m[1].trim(), body: "" };
+    } else if (current) {
+      current.body += line + "\n";
+    }
+  }
+  if (current) sections.push(current);
+  return sections.filter((s) => s.body.trim().length > 0);
+}
+
+async function copyText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text.trim());
+    toast.success("Kopierat");
+  } catch {
+    toast.error("Kunde inte kopiera");
+  }
+}
 
 /** Structured AI result shape (mirrors server ServiceResult). */
 export type Gap = {
@@ -119,19 +147,45 @@ function DocCard({
     setTimeout(() => w.print(), 300);
   };
 
+  const sections = splitSections(markdown);
+
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
-      <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h3 className="flex items-center gap-2 font-display text-lg font-semibold">
           <FileText className="h-5 w-5 text-muted-foreground" /> {title}
         </h3>
-        <Button variant="outline" size="sm" className="bg-background" onClick={downloadPdf}>
-          <Download className="mr-1.5 h-4 w-4" /> PDF
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="bg-background" onClick={() => copyText(markdown)}>
+            <Copy className="mr-1.5 h-4 w-4" /> Kopiera allt
+          </Button>
+          <Button variant="outline" size="sm" className="bg-background" onClick={downloadPdf}>
+            <Download className="mr-1.5 h-4 w-4" /> PDF
+          </Button>
+        </div>
       </div>
-      <article className="prose prose-sm max-w-none prose-headings:font-display">
-        <Streamdown>{markdown}</Streamdown>
-      </article>
+
+      {sections.length > 1 ? (
+        <div className="space-y-4">
+          {sections.map((s, i) => (
+            <div key={i} className="rounded-xl border bg-background/60 p-4">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <h4 className="font-display text-base font-semibold">{s.title}</h4>
+                <Button variant="ghost" size="sm" onClick={() => copyText(`${s.title}\n\n${s.body}`)}>
+                  <Copy className="mr-1.5 h-3.5 w-3.5" /> Kopiera
+                </Button>
+              </div>
+              <article className="prose prose-sm max-w-none prose-headings:font-display">
+                <Streamdown>{s.body}</Streamdown>
+              </article>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <article className="prose prose-sm max-w-none prose-headings:font-display">
+          <Streamdown>{markdown}</Streamdown>
+        </article>
+      )}
     </div>
   );
 }

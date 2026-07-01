@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNotNull, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   cmsContent,
@@ -402,6 +402,34 @@ export async function markSessionPaid(stripeSessionId: string) {
     .update(serviceSessions)
     .set({ paymentStatus: "paid" })
     .where(eq(serviceSessions.stripeSessionId, stripeSessionId));
+}
+
+// Delete sessions whose 90-day link has expired (and their messages). Returns count.
+export async function deleteExpiredSessions(): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const now = new Date();
+  const expired = await db
+    .select({ id: serviceSessions.id })
+    .from(serviceSessions)
+    .where(and(isNotNull(serviceSessions.expiresAt), lt(serviceSessions.expiresAt, now)));
+  let n = 0;
+  for (const row of expired) {
+    await db.delete(sessionMessages).where(eq(sessionMessages.sessionId, row.id));
+    await db.delete(serviceSessions).where(eq(serviceSessions.id, row.id));
+    n++;
+  }
+  return n;
+}
+
+// Set the 90-day expiry + email, and mark mail as sent, in one update.
+export async function setSessionDelivery(
+  sessionId: string,
+  patch: { email?: string | null; expiresAt?: Date; mailSent?: boolean }
+) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(serviceSessions).set(patch).where(eq(serviceSessions.id, sessionId));
 }
 
 // Unlock a session directly by our own session id (used by free/test mode).

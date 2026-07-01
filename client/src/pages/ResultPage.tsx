@@ -177,6 +177,12 @@ export default function ResultPage() {
             {/* Main result column */}
             <div className="space-y-6">
               <h1 className="font-display text-2xl font-semibold sm:text-3xl">Ditt resultat</h1>
+              {session.expiresAt && (
+                <p className="-mt-3 text-xs text-muted-foreground">
+                  Spara den här sidan. Din länk fungerar utan inloggning till och med{" "}
+                  {new Date(session.expiresAt).toLocaleDateString("sv-SE")}. Vi har också mejlat den till dig.
+                </p>
+              )}
               {working || adjusting ? (
                 <div className="rounded-2xl border bg-card p-8 text-center shadow-sm">
                   <Loader2 className="mx-auto h-6 w-6 animate-spin" />

@@ -11,8 +11,11 @@ import {
   listServices,
   markSessionPaid,
   markSessionPaidById,
+  setSessionDelivery,
   updateSession,
 } from "./db";
+import { sendResultEmail } from "./mailer";
+import { deleteExpiredSessions } from "./db";
 import { extractText } from "./ai/fileProcessing";
 import { validateContent } from "./ai/contentValidator";
 import { fetchReadableText } from "./ai/urlFetch";
@@ -67,8 +70,11 @@ export function registerCustomRoutes(app: Express) {
       }
 
       if (event.type === "checkout.session.completed") {
-        const session = event.data.object as { id: string };
-        await markSessionPaid(session.id);
+        const obj = event.data.object as { id: string; customer_details?: { email?: string }; customer_email?: string };
+        await markSessionPaid(obj.id);
+        const email = obj.customer_details?.email || obj.customer_email || null;
+        const s = await getSessionByStripeId(obj.id);
+        if (s) await deliverPaidSession(s.id, email);
       }
       res.json({ received: true });
     }
@@ -76,6 +82,34 @@ export function registerCustomRoutes(app: Express) {
 
   const router = express.Router();
   router.use(express.json({ limit: "30mb" }));
+
+  const RESULT_TTL_DAYS = 90;
+  // Set the 90-day expiry and send the confirmation email once. Safe to call
+  // multiple times (mail only sends when not already sent).
+  async function deliverPaidSession(sessionId: string, email: string | null) {
+    try {
+      const s = await getSession(sessionId);
+      if (!s) return;
+      const expiresAt = s.expiresAt ?? new Date(Date.now() + RESULT_TTL_DAYS * 24 * 60 * 60 * 1000);
+      const to = email || s.email || null;
+      if (!s.expiresAt || (email && email !== s.email)) {
+        await setSessionDelivery(sessionId, { expiresAt, email: to });
+      }
+      if (to && !s.mailSent) {
+        const base = process.env.PUBLIC_BASE_URL || "https://cvpiloten.se";
+        const svc = await getServiceBySlug(s.serviceSlug);
+        const ok = await sendResultEmail({
+          to,
+          serviceName: svc?.slug ? svc.slug.replace(/-/g, " ") : "din tjänst",
+          resultUrl: `${base}/resultat/${sessionId}`,
+          expiresAt,
+        });
+        if (ok) await setSessionDelivery(sessionId, { mailSent: true });
+      }
+    } catch (e) {
+      console.warn("[deliver] failed", e);
+    }
+  }
 
   // ---- Resolve active tenant (branding) from host/subdomain. Public. ----
   router.get("/tenant", async (req: Request, res: Response) => {
@@ -245,6 +279,7 @@ export function registerCustomRoutes(app: Express) {
           return res.status(403).json({ ok: false, message: "Fel åtkomstkod.", needCode: true });
         }
         await markSessionPaidById(sessionId);
+        await deliverPaidSession(sessionId, null);
         return res.json({ ok: true, free: true, url: `${origin}/resultat/${sessionId}?paid=1` });
       }
 
@@ -296,6 +331,8 @@ export function registerCustomRoutes(app: Express) {
         const checkout = await stripe.checkout.sessions.retrieve(session.stripeSessionId);
         if (checkout.payment_status === "paid") {
           await markSessionPaid(session.stripeSessionId);
+          const email = (checkout.customer_details?.email as string) || (checkout.customer_email as string) || null;
+          await deliverPaidSession(sessionId, email);
           return res.json({ ok: true, paid: true });
         }
       }
@@ -313,6 +350,21 @@ export function registerCustomRoutes(app: Express) {
   });
 
   app.use("/api/service", router);
+
+  // ---- Scheduled cleanup: delete sessions whose 90-day link has expired. ----
+  // Registered as a Heartbeat cron after deploy. Cron-only (checked via sdk).
+  app.post("/api/scheduled/cleanup", express.json(), async (req: Request, res: Response) => {
+    try {
+      const user = await sdk.authenticateRequest(req as never);
+      if (!user || !(user as { isCron?: boolean }).isCron) {
+        return res.status(403).json({ error: "cron-only" });
+      }
+      const removed = await deleteExpiredSessions();
+      return res.json({ ok: true, removed });
+    } catch (e) {
+      return res.status(500).json({ error: (e as Error).message, timestamp: new Date().toISOString() });
+    }
+  });
 
   // ---- Public tracking settings (no auth): used by the frontend to load pixels ----
   app.get("/api/public/tracking", async (_req: Request, res: Response) => {

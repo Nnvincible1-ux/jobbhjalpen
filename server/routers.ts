@@ -103,6 +103,7 @@ export const appRouter = router({
           paymentStatus: s.paymentStatus,
           status: s.status,
           remainingRounds: s.remainingRounds,
+          expiresAt: s.expiresAt,
           messages: messages.map((m) => ({ role: m.role, content: m.content, createdAt: m.createdAt })),
         };
       }),
