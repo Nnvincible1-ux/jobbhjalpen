@@ -86,7 +86,11 @@ export default function ServicePage() {
       });
       const data = await res.json();
       if (!data.ok) {
-        setError(data.message || "Filen kunde inte behandlas.");
+        let msg = data.message || "Filen kunde inte behandlas.";
+        if (data.code === "content_invalid" && typeof data.attemptsLeft === "number") {
+          msg += ` Du har ${data.attemptsLeft} försök kvar.`;
+        }
+        setError(msg);
         setBusy(false);
         return;
       }

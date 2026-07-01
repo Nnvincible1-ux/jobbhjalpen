@@ -14,6 +14,8 @@ import {
   updateSession,
 } from "./db";
 import { extractText } from "./ai/fileProcessing";
+import { validateContent } from "./ai/contentValidator";
+import { clientIp, rateLimit } from "./rateLimit";
 import { getStripe, isStripeConfigured } from "./payments/stripe";
 import { getTenantBySlug, resolveTenantSlug } from "./tenant";
 import { sdk } from "./_core/sdk";
@@ -90,9 +92,24 @@ export function registerCustomRoutes(app: Express) {
     });
   });
 
+  // Track failed content-validation attempts per IP+service (max 3).
+  const validationFails = new Map<string, number>();
+
   // ---- Upload + pre-process. Creates an unpaid session. No LLM call here. ----
   router.post("/upload", async (req: Request, res: Response) => {
     try {
+      // IP rate limiting (abuse / basic DDoS protection).
+      const ip = clientIp(req as never);
+      const rl = rateLimit(ip);
+      if (!rl.allowed) {
+        return res.status(429).json({
+          ok: false,
+          code: "rate_limited",
+          message: "För många försök. Vänta en stund och försök igen.",
+          retryAfterSec: rl.retryAfterSec,
+        });
+      }
+
       const { serviceSlug, fileBase64, fileName, mimeType, annonsText, tenantId, participantId } = req.body as {
         serviceSlug: string;
         fileBase64: string;
@@ -142,6 +159,35 @@ export function registerCustomRoutes(app: Express) {
       const result = await extractText(buffer, fileName, mimeType || "");
       if (!result.ok) {
         return res.status(422).json({ ok: false, code: result.code, message: result.message });
+      }
+
+      // AI CONTENT VALIDATION (consumer flow only), BEFORE payment. Confirms the
+      // document looks like the expected type and the ad looks like a job ad.
+      // Max 3 failed attempts per IP+service, then a temporary block.
+      if (!isOrg) {
+        const failKey = `${ip}:${serviceSlug}`;
+        const fails = validationFails.get(failKey) ?? 0;
+        if (fails >= 3) {
+          return res.status(429).json({
+            ok: false,
+            code: "too_many_invalid",
+            message:
+              "Du har försökt med fel dokument tre gånger. Av säkerhetsskäl är fler försök tillfälligt blockerade. Försök igen om en stund med rätt dokument.",
+          });
+        }
+        const verdict = await validateContent(service.promptKey, result.text, annonsText);
+        if (!verdict.ok) {
+          validationFails.set(failKey, fails + 1);
+          return res.status(422).json({
+            ok: false,
+            code: "content_invalid",
+            problem: verdict.problem,
+            message: verdict.message,
+            attemptsLeft: Math.max(0, 3 - (fails + 1)),
+          });
+        }
+        // Passed: reset the counter for this IP+service.
+        validationFails.delete(failKey);
       }
 
       const id = nanoid();
