@@ -13,7 +13,19 @@ import { chat, chatJson, getModels, type ChatMessage } from "./provider";
 import { getSystemPrompt, RESULT_JSON_HINT } from "./prompts";
 import { HUMANIZER_RULES, needsHumanizerPass, stripAiTells } from "./humanizer";
 
-export type Gap = { label: string; why: string; suggestion: string };
+export type Gap = {
+  label: string;
+  why: string;
+  suggestion: string;
+  /** Estimated profile score impact, e.g. +6. 0 when unknown. */
+  scoreImpact?: number;
+  /** True when this is a new claim the user must confirm is true. */
+  needsValidation?: boolean;
+  /** Which section it affects (Headline, About, Erfarenhet, Skills, ...). */
+  section?: string;
+  /** High | Medium | Low. */
+  priority?: string;
+};
 
 export type ServiceResult = {
   matchScore: number;
@@ -23,6 +35,10 @@ export type ServiceResult = {
   adaptedCv: string;
   coverLetter: string;
   refusal: string;
+  /** LinkedIn-specific: current vs potential score and a short explanation. */
+  currentScore?: number;
+  potentialScore?: number;
+  scoreExplanation?: string;
 };
 
 export type RunInput = {
@@ -31,10 +47,15 @@ export type RunInput = {
   annonsText?: string | null;
   /** Suggestions (gap labels/suggestions) the user opted to include. */
   selectedAdditions?: string[];
+  /** LinkedIn target direction (industry/role, audience, tone, goal). */
+  targetContext?: string | null;
 };
 
-function buildUserContent(documentText: string, annonsText?: string | null, additions?: string[]): string {
+function buildUserContent(documentText: string, annonsText?: string | null, additions?: string[], targetContext?: string | null): string {
   let userContent = `UNDERLAG (dokumenttext):\n${documentText}`;
+  if (targetContext && targetContext.trim().length > 0) {
+    userContent += `\n\nMÅLINRIKTNING (användarens svar):\n${targetContext.trim()}`;
+  }
   if (annonsText && annonsText.trim().length > 0) {
     userContent += `\n\nJOBBANNONS / KONTEXT:\n${annonsText.trim()}`;
   }
@@ -51,12 +72,13 @@ export async function runService(input: RunInput): Promise<ServiceResult> {
   const { gen } = await getModels();
   const messages: ChatMessage[] = [
     { role: "system", content: system },
-    { role: "user", content: buildUserContent(input.documentText, input.annonsText, input.selectedAdditions) },
+    { role: "user", content: buildUserContent(input.documentText, input.annonsText, input.selectedAdditions, input.targetContext) },
   ];
   const raw = await chatJson(gen, messages);
   return finalize(raw, input.promptKey);
 }
 
+// keep a reference so the compiler knows targetContext is used via buildUserContent
 export type AdjustInput = {
   promptKey: string;
   history: { role: "user" | "assistant"; content: string }[];
@@ -151,16 +173,26 @@ async function finalize(raw: string, promptKey: string): Promise<ServiceResult> 
     return { matchScore: 0, scoreLabel: "", summary: [], gaps: [], adaptedCv: "", coverLetter: "", refusal };
   }
 
-  const score = Math.max(0, Math.min(100, Math.round(Number(p.matchScore) || 0)));
+  const clamp = (n: unknown) => Math.max(0, Math.min(100, Math.round(Number(n) || 0)));
+  const current = p.currentScore !== undefined ? clamp(p.currentScore) : undefined;
+  const potential = p.potentialScore !== undefined ? clamp(p.potentialScore) : undefined;
+  const score = current ?? clamp(p.matchScore);
   const summary = Array.isArray(p.summary) ? p.summary.filter((s) => typeof s === "string" && s.trim()) : [];
   const gaps = Array.isArray(p.gaps)
     ? p.gaps
         .filter((g) => g && typeof g === "object")
-        .map((g) => ({
-          label: String((g as Gap).label ?? "").trim(),
-          why: String((g as Gap).why ?? "").trim(),
-          suggestion: String((g as Gap).suggestion ?? "").trim(),
-        }))
+        .map((g) => {
+          const gg = g as Gap;
+          return {
+            label: String(gg.label ?? "").trim(),
+            why: stripAiTells(String(gg.why ?? "").trim()),
+            suggestion: stripAiTells(String(gg.suggestion ?? "").trim()),
+            scoreImpact: Number.isFinite(Number(gg.scoreImpact)) ? Math.round(Number(gg.scoreImpact)) : undefined,
+            needsValidation: gg.needsValidation === true,
+            section: gg.section ? String(gg.section).trim() : undefined,
+            priority: gg.priority ? String(gg.priority).trim() : undefined,
+          };
+        })
         .filter((g) => g.label)
     : [];
 
@@ -172,10 +204,13 @@ async function finalize(raw: string, promptKey: string): Promise<ServiceResult> 
     matchScore: score,
     scoreLabel: String(p.scoreLabel ?? "").trim() || labelForScore(score),
     summary: summary.map((s) => stripAiTells(s)),
-    gaps: gaps.map((g) => ({ label: g.label, why: stripAiTells(g.why), suggestion: stripAiTells(g.suggestion) })),
+    gaps,
     adaptedCv,
     coverLetter,
     refusal: "",
+    currentScore: current,
+    potentialScore: potential,
+    scoreExplanation: p.scoreExplanation ? stripAiTells(String(p.scoreExplanation)) : undefined,
   };
 }
 

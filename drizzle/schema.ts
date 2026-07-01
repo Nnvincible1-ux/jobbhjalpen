@@ -128,6 +128,7 @@ export const serviceSessions = mysqlTable("service_sessions", {
   annonsText: text("annonsText"), // optional job ad text
   remainingRounds: int("remainingRounds").default(0).notNull(),
   nonsenseStrikes: int("nonsenseStrikes").default(0).notNull(),
+  targetContext: text("targetContext"),
   tenantId: int("tenantId"),
   participantId: int("participantId"),
   coachUserId: int("coachUserId"),

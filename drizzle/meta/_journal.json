@@ -78,6 +78,13 @@
       "when": 1782914363143,
       "tag": "0010_gorgeous_chronomancer",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1782919155685,
+      "tag": "0011_smiling_vindicator",
+      "breakpoints": true
     }
   ]
 }

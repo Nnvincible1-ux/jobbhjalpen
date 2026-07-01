@@ -129,6 +129,7 @@ export const appRouter = router({
           documentText: s.inputText || "",
           annonsText: s.annonsText,
           selectedAdditions: input.additions,
+          targetContext: s.targetContext,
         });
         await addMessage(input.id, "assistant", JSON.stringify(result));
         await updateSession(input.id, { status: "completed" });

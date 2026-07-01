@@ -111,13 +111,14 @@ export function registerCustomRoutes(app: Express) {
         });
       }
 
-      const { serviceSlug, fileBase64, fileName, mimeType, annonsText, annonsUrl, tenantId, participantId } = req.body as {
+      const { serviceSlug, fileBase64, fileName, mimeType, annonsText, annonsUrl, targetContext, tenantId, participantId } = req.body as {
         serviceSlug: string;
         fileBase64: string;
         fileName: string;
         mimeType: string;
         annonsText?: string;
         annonsUrl?: string;
+        targetContext?: string;
         tenantId?: number;
         participantId?: number;
       };
@@ -212,6 +213,7 @@ export function registerCustomRoutes(app: Express) {
         inputFileName: fileName,
         inputText: result.text,
         annonsText: resolvedAnnons,
+        targetContext: targetContext && targetContext.trim() ? targetContext.trim() : null,
         remainingRounds: service.hasAdjustments ? service.maxRounds : 0,
         tenantId: isOrg ? tenantId : null,
         participantId: isOrg ? participantId : null,

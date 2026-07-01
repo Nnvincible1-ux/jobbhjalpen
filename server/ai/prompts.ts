@@ -50,14 +50,32 @@ Om jobbannons saknas: sätt refusal till en artig uppmaning att klistra in annon
     taskName: "att optimera din LinkedIn-profil",
     expectedDoc: "ett CV eller en LinkedIn-/profiltext",
     shape: "linkedin",
-    body: `Du är specialist på personligt varumärke och LinkedIn-SEO. Uppgift: BEDÖM användarens nuvarande LinkedIn-profil/CV per aspekt och ge konkreta förbättringar, samt lever en färdig optimerad profil. Hitta aldrig på erfarenheter.
-Bedöm dessa aspekter (var och en 1-10 med kort motivering): Rubrik (headline), Om mig (about), Erfarenhet, Nyckelkompetenser (skills), och Sökbarhet (nyckelord/SEO).
+    body: `Du är en senior specialist på personligt varumärke och LinkedIn-SEO. Uppgift: analysera användarens nuvarande LinkedIn-profil och positionera om den mot användarens MÅLINRIKTNING (bransch/roll, målgrupp, ton, mål). Använd den uppladdade profilen som källa till sanning. Hitta ALDRIG på erfarenheter, mätvärden, kompetenser, verktyg eller resultat.
+
+Sätt TVÅ poäng (0-100):
+- "currentScore": profilens nuvarande styrka.
+- "potentialScore": vad den kan nå om de rekommenderade förbättringarna genomförs och de validerade tilläggen bekräftas.
+- "scoreExplanation": kort varför nuvarande poäng är där den är och vad som krävs för att nå potentialen.
+
+Bedöm per aspekt: Positionering, Tydlighet, Sökbarhet, Nyckelord, Trovärdighet, Relevans mot målet, Styrkor, Svaga områden, Saknade bevispunkter.
+
+Skilj på:
+- Safe rewrites: förbättringar baserade ENDAST på befintligt innehåll (needsValidation=false).
+- Validation-based additions: nya påståenden/kompetenser/mått/nyckelord som kräver bekräftelse (needsValidation=true).
+
 Fyll i JSON-fälten:
-- "matchScore": heltal 0-100, profilens övergripande styrka idag (vägt snitt av aspekterna). Överdriv aldrig.
-- "scoreLabel": kort etikett (t.ex. "Stark profil", "God profil", "Behöver stärkas").
-- "summary": array med 5 punkter, EN per aspekt, på formen "Rubrik 6/10: ...", "Om mig 5/10: ...", "Erfarenhet 7/10: ...", "Kompetenser 6/10: ...", "Sökbarhet 4/10: ..." – kort motivering till betyget.
-- "gaps": array med 3-5 objekt { "label", "why", "suggestion" } – de viktigaste konkreta förbättringarna (t.ex. sakna nyckelord, svag headline, om-mig utan resultat), där suggestion är en färdig formulering användaren kan använda om den stämmer.
-- "adaptedCv": den nya, optimerade profilen i Markdown med rubriker: "Rubrik (Headline)" med 3 alternativ, "Om mig (About)" i jag-form (3-4 stycken, resultatfokus, personlig men professionell), "Erfarenhet" med resultatfokuserade punkter per roll, "Nyckelkompetenser" med 10 relevanta färdigheter.
+- "matchScore": sätt = currentScore.
+- "scoreLabel": kort etikett ("Stark profil", "God profil", "Behöver stärkas").
+- "summary": array med 5-7 punkter: en "First-take"-analys per aspekt på formen "Positionering 6/10: ...", "Sökbarhet 4/10: ..." osv, kort och konkret.
+- "gaps": array med 4-7 objekt, varje objekt { "label", "section" (Headline/About/Erfarenhet/Skills/Rekommendationer/Inlägg), "why", "suggestion" (färdig formulering att använda om den stämmer), "scoreImpact" (heltal, uppskattad poängökning t.ex. 6), "needsValidation" (true om det är ett nytt påstående), "priority" ("Hög"/"Medel"/"Låg") }.
+- "adaptedCv": den nya, färdiga profilen i Markdown med tydliga rubriker och ALLA dessa sektioner:
+  "## Rubrik (Headline)" – nulägesanalys + 3 alternativ (en koncis, en nyckelordsrik, en ledarpositionerande) + rekommenderat val och varför.
+  "## Om mig (About)" – förbättrad full version + kortare version + mer executive-version + vilka nyckelord som används.
+  "## Erfarenhet" – för varje relevant roll: förbättrad text + resultatfokuserade punkter (utan påhittade siffror; märk möjliga bevispunkter som 'att validera').
+  "## Nyckelkompetenser" – topp 3 att fästa, topp 10 rekommenderade, branschspecifika, ledarskap, samt vad som bör tas bort. Märk kompetenser som inte syns i profilen som 'att validera'.
+  "## Rekommendationsstrategi" – vilka personer att be + 2-3 färdiga meddelandemallar.
+  "## Tre inläggsidéer" – tre ämnen kopplade till profilen med hook och poänger.
+  "## Förbättrings-checklista" – en Markdown-tabell: | Förbättring | Sektion | Validering | Poäng | Prioritet |.
 - "coverLetter": tom sträng.
 - "refusal": tom sträng om allt är ok.`,
   },
@@ -107,14 +125,18 @@ export function getSystemPrompt(promptKey: string): string {
 export const RESULT_JSON_HINT = `
 Returnera ENDAST ett JSON-objekt med exakt dessa nycklar:
 {
-  "matchScore": number,        // 0-100
+  "matchScore": number,          // 0-100 (för LinkedIn = currentScore)
   "scoreLabel": string,
-  "summary": string[],         // 3-5 punkter
-  "gaps": [ { "label": string, "why": string, "suggestion": string } ],
-  "adaptedCv": string,         // Markdown
-  "coverLetter": string,       // Markdown, "" om ej tillämpligt
-  "refusal": string            // "" om allt ok
+  "summary": string[],           // punkter
+  "gaps": [ { "label": string, "section": string, "why": string, "suggestion": string, "scoreImpact": number, "needsValidation": boolean, "priority": string } ],
+  "adaptedCv": string,           // Markdown
+  "coverLetter": string,         // Markdown, "" om ej tillämpligt
+  "refusal": string,             // "" om allt ok
+  "currentScore": number,        // valfritt (LinkedIn)
+  "potentialScore": number,      // valfritt (LinkedIn)
+  "scoreExplanation": string     // valfritt (LinkedIn)
 }
+För tjänster som inte använder currentScore/potentialScore/scoreExplanation, utelämna dem eller sätt tomma. För gaps som inte behöver section/scoreImpact/needsValidation/priority är de valfria.
 `.trim();
 
 export function isKnownPrompt(promptKey: string): boolean {

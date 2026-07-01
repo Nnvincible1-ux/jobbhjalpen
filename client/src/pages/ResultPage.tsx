@@ -185,7 +185,20 @@ export default function ResultPage() {
                   </p>
                 </div>
               ) : result ? (
-                <ResultMatchView result={result} onApplyAdditions={applyViaAdjust} applying={adjusting} />
+                <ResultMatchView
+                  result={result}
+                  onApplyAdditions={applyViaAdjust}
+                  applying={adjusting}
+                  docTitle={
+                    session?.serviceSlug === "linkedin-makeover"
+                      ? "Din optimerade LinkedIn-profil"
+                      : session?.serviceSlug === "cv-granskning"
+                        ? "Granskning och åtgärder"
+                        : session?.serviceSlug === "intervju"
+                          ? "Ditt intervjumaterial"
+                          : "Ditt anpassade CV"
+                  }
+                />
               ) : (
                 <p className="text-muted-foreground">Inget resultat ännu.</p>
               )}

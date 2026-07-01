@@ -1,0 +1,1 @@
+ALTER TABLE `service_sessions` ADD `targetContext` text;

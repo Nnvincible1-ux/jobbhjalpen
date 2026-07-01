@@ -21,6 +21,11 @@ export default function ServicePage() {
   const [annons, setAnnons] = useState("");
   const [annonsUrl, setAnnonsUrl] = useState("");
   const [annonsMode, setAnnonsMode] = useState<"text" | "url">("text");
+  // LinkedIn target direction
+  const [liTarget, setLiTarget] = useState("");
+  const [liAudience, setLiAudience] = useState("");
+  const [liTone, setLiTone] = useState("");
+  const [liGoal, setLiGoal] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -86,6 +91,16 @@ export default function ServicePage() {
           mimeType: file.type,
           annonsText: annonsMode === "text" ? annons : "",
           annonsUrl: annonsMode === "url" ? annonsUrl : "",
+          targetContext: isLinkedin
+            ? [
+                liTarget && `Bransch/roll att stärka profilen mot: ${liTarget}`,
+                liAudience && `Vill attrahera: ${liAudience}`,
+                liTone && `Önskad ton: ${liTone}`,
+                liGoal && `Huvudmål: ${liGoal}`,
+              ]
+                .filter(Boolean)
+                .join("\n")
+            : "",
         }),
       });
       const data = await res.json();
@@ -188,6 +203,29 @@ export default function ServicePage() {
                 onChange={(e) => onSelect(e.target.files?.[0] ?? null)}
               />
             </button>
+
+            {isLinkedin && (
+              <div className="mt-4 space-y-3 rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+                <p className="text-sm font-medium text-foreground">Berätta vart du vill</p>
+                <p className="text-xs text-muted-foreground">Så kan vi positionera profilen rätt. Fyll i det som passar.</p>
+                <div>
+                  <label className="text-xs font-medium">Bransch, roll eller möjlighet du vill stärka mot</label>
+                  <input value={liTarget} onChange={(e) => setLiTarget(e.target.value)} placeholder="t.ex. Kommersiell chef inom fintech" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium">Vem vill du attrahera?</label>
+                  <input value={liAudience} onChange={(e) => setLiAudience(e.target.value)} placeholder="t.ex. rekryterare, arbetsgivare, kunder, investerare" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium">Önskad ton</label>
+                  <input value={liTone} onChange={(e) => setLiTone(e.target.value)} placeholder="t.ex. executive, förtroendeingivande, kommersiell" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium">Ditt huvudmål</label>
+                  <input value={liGoal} onChange={(e) => setLiGoal(e.target.value)} placeholder="t.ex. bli headhuntad, attrahera kunder, bygga auktoritet" className="mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm" />
+                </div>
+              </div>
+            )}
 
             {isLinkedin && (
               <div className="mt-4 rounded-xl bg-secondary/50 p-3 text-xs text-muted-foreground">

@@ -4,7 +4,15 @@ import { Check, Download, FileText, Loader2, Plus, Sparkles } from "lucide-react
 import { Button } from "@/components/ui/button";
 
 /** Structured AI result shape (mirrors server ServiceResult). */
-export type Gap = { label: string; why: string; suggestion: string };
+export type Gap = {
+  label: string;
+  why: string;
+  suggestion: string;
+  scoreImpact?: number;
+  needsValidation?: boolean;
+  section?: string;
+  priority?: string;
+};
 export type ServiceResult = {
   matchScore: number;
   scoreLabel: string;
@@ -13,6 +21,9 @@ export type ServiceResult = {
   adaptedCv: string;
   coverLetter: string;
   refusal: string;
+  currentScore?: number;
+  potentialScore?: number;
+  scoreExplanation?: string;
 };
 
 /** Parse a stored assistant message into a ServiceResult, tolerating old plain text. */
@@ -28,6 +39,9 @@ export function parseResult(content: string): ServiceResult | null {
         adaptedCv: String(o.adaptedCv ?? ""),
         coverLetter: String(o.coverLetter ?? ""),
         refusal: String(o.refusal ?? ""),
+        currentScore: o.currentScore !== undefined ? Number(o.currentScore) : undefined,
+        potentialScore: o.potentialScore !== undefined ? Number(o.potentialScore) : undefined,
+        scoreExplanation: o.scoreExplanation ? String(o.scoreExplanation) : undefined,
       };
     }
   } catch {
@@ -132,10 +146,12 @@ export default function ResultMatchView({
   result,
   onApplyAdditions,
   applying,
+  docTitle,
 }: {
   result: ServiceResult;
   onApplyAdditions: (additions: string[]) => void;
   applying: boolean;
+  docTitle?: string;
 }) {
   const [selected, setSelected] = useState<Record<number, boolean>>({});
   const selectedList = useMemo(
@@ -159,7 +175,29 @@ export default function ResultMatchView({
     <div className="space-y-6">
       {/* 1. Match summary first */}
       <section className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
-        <ScoreRing score={result.matchScore} label={result.scoreLabel} />
+        {result.currentScore !== undefined && result.potentialScore !== undefined ? (
+          <div>
+            <div className="flex flex-wrap items-center gap-4">
+              <ScoreRing score={result.currentScore} label={result.scoreLabel || "Nuvarande profil"} />
+              <div className="flex items-center gap-3 rounded-xl bg-secondary/60 px-4 py-3">
+                <div className="text-center">
+                  <div className="text-xs text-muted-foreground">Nu</div>
+                  <div className="font-display text-2xl font-semibold">{result.currentScore}</div>
+                </div>
+                <div className="text-muted-foreground">&rarr;</div>
+                <div className="text-center">
+                  <div className="text-xs text-muted-foreground">Möjligt</div>
+                  <div className="font-display text-2xl font-semibold text-emerald-600">{result.potentialScore}</div>
+                </div>
+              </div>
+            </div>
+            {result.scoreExplanation && (
+              <p className="mt-3 text-sm text-muted-foreground">{result.scoreExplanation}</p>
+            )}
+          </div>
+        ) : (
+          <ScoreRing score={result.matchScore} label={result.scoreLabel} />
+        )}
         {result.summary.length > 0 && (
           <div className="mt-5 border-t pt-5">
             <p className="mb-2 text-sm font-semibold">Så matchade vi mot rollen</p>
@@ -180,10 +218,10 @@ export default function ResultMatchView({
         <section className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-sm sm:p-6">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-amber-600" />
-            <h3 className="font-display text-lg font-semibold">Höj din matchning</h3>
+            <h3 className="font-display text-lg font-semibold">Höj din poäng</h3>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Lägg till det som stämmer för dig. Bocka i ett eller flera förslag, så väver vi in dem sanningsenligt och kör om.
+            Bocka i <strong>alla</strong> förslag du vill genomföra nu. När du trycker “Lägg till valda” räknas det som <strong>en</strong> justeringsrunda, och de förslag du lämnar kvar finns kvar att lägga till senare. Förslag märkta <em>Behöver valideras</em> läggs bara in om de stämmer för dig.
           </p>
           <div className="mt-4 space-y-3">
             {result.gaps.map((g, i) => (
@@ -197,9 +235,23 @@ export default function ResultMatchView({
                   onChange={() => toggle(i)}
                   className="mt-1 h-4 w-4"
                 />
-                <span>
-                  <span className="block text-sm font-medium">{g.label}</span>
-                  {g.why && <span className="block text-xs text-muted-foreground">{g.why}</span>}
+                <span className="min-w-0">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-medium">{g.label}</span>
+                    {typeof g.scoreImpact === "number" && g.scoreImpact > 0 && (
+                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">+{g.scoreImpact} poäng</span>
+                    )}
+                    {g.section && (
+                      <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">{g.section}</span>
+                    )}
+                    {g.needsValidation && (
+                      <span className="rounded-full bg-amber-200/70 px-2 py-0.5 text-[11px] font-medium text-amber-900">Behöver valideras</span>
+                    )}
+                    {g.priority && (
+                      <span className="text-[11px] text-muted-foreground">Prio: {g.priority}</span>
+                    )}
+                  </span>
+                  {g.why && <span className="mt-0.5 block text-xs text-muted-foreground">{g.why}</span>}
                   {g.suggestion && <span className="mt-1 block text-xs italic text-foreground/80">”{g.suggestion}”</span>}
                 </span>
               </label>
@@ -219,7 +271,7 @@ export default function ResultMatchView({
 
       {/* 3. Documents */}
       {result.adaptedCv && (
-        <DocCard title="Ditt anpassade CV" markdown={result.adaptedCv} filenameBase="cv" />
+        <DocCard title={docTitle || "Ditt anpassade CV"} markdown={result.adaptedCv} filenameBase="cv" />
       )}
       {result.coverLetter && (
         <DocCard title="Personligt brev" markdown={result.coverLetter} filenameBase="personligt-brev" />
