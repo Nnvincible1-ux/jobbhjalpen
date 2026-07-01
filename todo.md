@@ -165,3 +165,13 @@
 - [x] Saklig ton (tog bort "Kul att du hörde av dig")
 - [x] cv-anpassning fick 3 justeringsrundor (DB + seed)
 - [x] 32/32 vitest pass; verifierat live på cvpiloten.se
+
+
+## Justeringslogik: nonsens + bevarat resultat — klart
+- [x] nonsenseStrikes-kolumn på service_sessions (DB + schema)
+- [x] Dravel 1:a gången: "Jag uppfattade inte vad du vill justera" — ingen runda, resultat kvar
+- [x] Dravel 2:a gången: bestämt avslag, räknas som justeringsförsök, resultat kvar
+- [x] Off-topic refusal skriver ALDRIG över resultatet, förbrukar ingen runda
+- [x] Frontend visar senaste GILTIGA resultat (hoppar över legacy refusal-meddelanden)
+- [x] Bättre nonsensdetektering (upprepade ord: "banan banan banan tulpan")
+- [x] 34/34 tester pass; verifierat live (dravel x1, dravel x2, riktig justering)
