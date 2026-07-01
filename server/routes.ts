@@ -15,6 +15,7 @@ import {
 } from "./db";
 import { extractText } from "./ai/fileProcessing";
 import { validateContent } from "./ai/contentValidator";
+import { fetchReadableText } from "./ai/urlFetch";
 import { clientIp, rateLimit } from "./rateLimit";
 import { getStripe, isStripeConfigured } from "./payments/stripe";
 import { getTenantBySlug, resolveTenantSlug } from "./tenant";
@@ -110,12 +111,13 @@ export function registerCustomRoutes(app: Express) {
         });
       }
 
-      const { serviceSlug, fileBase64, fileName, mimeType, annonsText, tenantId, participantId } = req.body as {
+      const { serviceSlug, fileBase64, fileName, mimeType, annonsText, annonsUrl, tenantId, participantId } = req.body as {
         serviceSlug: string;
         fileBase64: string;
         fileName: string;
         mimeType: string;
         annonsText?: string;
+        annonsUrl?: string;
         tenantId?: number;
         participantId?: number;
       };
@@ -161,6 +163,17 @@ export function registerCustomRoutes(app: Express) {
         return res.status(422).json({ ok: false, code: result.code, message: result.message });
       }
 
+      // Optional job-ad URL: fetch readable text. If it fails (login wall/block),
+      // tell the user to paste the text instead.
+      let resolvedAnnons = annonsText || null;
+      if ((!resolvedAnnons || !resolvedAnnons.trim()) && annonsUrl && annonsUrl.trim()) {
+        const fetched = await fetchReadableText(annonsUrl.trim());
+        if (!fetched.ok) {
+          return res.status(422).json({ ok: false, code: "url_unreadable", problem: "annons", message: fetched.message });
+        }
+        resolvedAnnons = fetched.text;
+      }
+
       // AI CONTENT VALIDATION (consumer flow only), BEFORE payment. Confirms the
       // document looks like the expected type and the ad looks like a job ad.
       // Max 3 failed attempts per IP+service, then a temporary block.
@@ -175,7 +188,7 @@ export function registerCustomRoutes(app: Express) {
               "Du har försökt med fel dokument tre gånger. Av säkerhetsskäl är fler försök tillfälligt blockerade. Försök igen om en stund med rätt dokument.",
           });
         }
-        const verdict = await validateContent(service.promptKey, result.text, annonsText);
+        const verdict = await validateContent(service.promptKey, result.text, resolvedAnnons);
         if (!verdict.ok) {
           validationFails.set(failKey, fails + 1);
           return res.status(422).json({
@@ -198,7 +211,7 @@ export function registerCustomRoutes(app: Express) {
         status: "ready",
         inputFileName: fileName,
         inputText: result.text,
-        annonsText: annonsText || null,
+        annonsText: resolvedAnnons,
         remainingRounds: service.hasAdjustments ? service.maxRounds : 0,
         tenantId: isOrg ? tenantId : null,
         participantId: isOrg ? participantId : null,

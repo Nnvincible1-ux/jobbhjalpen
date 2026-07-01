@@ -33,28 +33,52 @@ export async function getModels(): Promise<{ gen: string; humanizer: string }> {
   return { gen: c.genModel, humanizer: c.humanizerModel };
 }
 
-/** Single chat completion against the configured OpenAI-compatible endpoint. */
-export async function chat(model: string, messages: ChatMessage[]): Promise<string> {
+const QUOTA_MESSAGE =
+  "Tjänsten har för många förfrågningar just nu. Försök igen om en liten stund.";
+
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/**
+ * POST to the chat endpoint with limited retry on 429 (rate/quota). On a final
+ * 429 we throw a short, user-friendly message (never the raw provider payload).
+ */
+async function postChat(body: Record<string, unknown>): Promise<string> {
   const c = await resolveConfig();
   if (!c.apiKey) {
     throw new Error("Ingen AI-nyckel konfigurerad. Ange den i adminverktyget under AI-inställningar.");
   }
-  const res = await fetch(`${c.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${c.apiKey}`,
-    },
-    body: JSON.stringify({ model, messages }),
-  });
-  if (!res.ok) {
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch(`${c.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${c.apiKey}` },
+      body: JSON.stringify({ model: (body as { model?: string }).model, ...body }),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+      return data.choices?.[0]?.message?.content ?? "";
+    }
+    if (res.status === 429 && attempt < maxAttempts) {
+      // Respect Retry-After when present, else exponential backoff (capped).
+      const ra = Number(res.headers.get("retry-after"));
+      const waitMs = Number.isFinite(ra) && ra > 0 ? Math.min(ra * 1000, 8000) : attempt * 2500;
+      await sleep(waitMs);
+      continue;
+    }
+    if (res.status === 429) {
+      throw new Error(QUOTA_MESSAGE);
+    }
     const text = await res.text();
     throw new Error(`AI-anrop misslyckades: ${res.status} ${res.statusText} ${text}`);
   }
-  const data = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  return data.choices?.[0]?.message?.content ?? "";
+  throw new Error(QUOTA_MESSAGE);
+}
+
+/** Single chat completion against the configured OpenAI-compatible endpoint. */
+export async function chat(model: string, messages: ChatMessage[]): Promise<string> {
+  return postChat({ model, messages });
 }
 
 /** Chat completion that requests a JSON object response (OpenAI-compatible). */
@@ -63,22 +87,28 @@ export async function chatJson(model: string, messages: ChatMessage[]): Promise<
   if (!c.apiKey) {
     throw new Error("Ingen AI-nyckel konfigurerad. Ange den i adminverktyget under AI-inställningar.");
   }
-  const res = await fetch(`${c.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${c.apiKey}`,
-    },
-    body: JSON.stringify({ model, messages, response_format: { type: "json_object" } }),
-  });
-  if (!res.ok) {
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch(`${c.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${c.apiKey}` },
+      body: JSON.stringify({ model, messages, response_format: { type: "json_object" } }),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+      return data.choices?.[0]?.message?.content ?? "";
+    }
     // Some providers/models reject response_format; fall back to plain chat.
     if (res.status === 400) return chat(model, messages);
+    if (res.status === 429 && attempt < maxAttempts) {
+      const ra = Number(res.headers.get("retry-after"));
+      const waitMs = Number.isFinite(ra) && ra > 0 ? Math.min(ra * 1000, 8000) : attempt * 2500;
+      await new Promise((r) => setTimeout(r, waitMs));
+      continue;
+    }
+    if (res.status === 429) throw new Error(QUOTA_MESSAGE);
     const text = await res.text();
     throw new Error(`AI-anrop misslyckades: ${res.status} ${res.statusText} ${text}`);
   }
-  const data = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  return data.choices?.[0]?.message?.content ?? "";
+  throw new Error(QUOTA_MESSAGE);
 }

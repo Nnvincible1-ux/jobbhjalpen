@@ -19,9 +19,12 @@ export default function ServicePage() {
 
   const [file, setFile] = useState<File | null>(null);
   const [annons, setAnnons] = useState("");
+  const [annonsUrl, setAnnonsUrl] = useState("");
+  const [annonsMode, setAnnonsMode] = useState<"text" | "url">("text");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isLinkedin = slug === "linkedin-makeover";
 
   if (isLoading) {
     return (
@@ -81,7 +84,8 @@ export default function ServicePage() {
           fileBase64: base64,
           fileName: file.name,
           mimeType: file.type,
-          annonsText: annons,
+          annonsText: annonsMode === "text" ? annons : "",
+          annonsUrl: annonsMode === "url" ? annonsUrl : "",
         }),
       });
       const data = await res.json();
@@ -185,15 +189,62 @@ export default function ServicePage() {
               />
             </button>
 
+            {isLinkedin && (
+              <div className="mt-4 rounded-xl bg-secondary/50 p-3 text-xs text-muted-foreground">
+                <p className="font-medium text-foreground">Så får du fram din profil</p>
+                <p className="mt-1">
+                  <strong>Rekommenderat, PDF:</strong> Öppna LinkedIn, klicka på <em>Me</em> (din bild uppe till höger) → <em>View Profile</em> → knappen <em>Resources</em> (eller <em>More</em>) → <em>Save to PDF</em>. Ladda sedan upp PDF:en här.
+                </p>
+                <p className="mt-2">
+                  <strong>Publik länk:</strong> På din profil, se rutan <em>Public profile &amp; URL</em> uppe till höger, eller kopiera adressen från <em>Edit public profile &amp; URL</em>. Den ser ut som www.linkedin.com/in/dittnamn.
+                </p>
+                <p className="mt-2">Obs: LinkedIn blockerar ofta automatisk läsning av länkar. Fungerar inte länken, ladda upp PDF:en i stället.</p>
+              </div>
+            )}
+
             {service.acceptsAnnons && (
               <div className="mt-4">
-                <label className="text-sm font-medium">Jobbannons (klistra in text)</label>
-                <Textarea
-                  value={annons}
-                  onChange={(e) => setAnnons(e.target.value)}
-                  placeholder="Klistra in annonsen här..."
-                  className="mt-2 min-h-28"
-                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAnnonsMode("text")}
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${annonsMode === "text" ? "bg-foreground text-background" : "bg-secondary text-foreground"}`}
+                  >
+                    Klistra in text
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAnnonsMode("url")}
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${annonsMode === "url" ? "bg-foreground text-background" : "bg-secondary text-foreground"}`}
+                  >
+                    Dela länk
+                  </button>
+                </div>
+                {annonsMode === "text" ? (
+                  <div className="mt-3">
+                    <label className="text-sm font-medium">Jobbannons (klistra in text)</label>
+                    <Textarea
+                      value={annons}
+                      onChange={(e) => setAnnons(e.target.value)}
+                      placeholder="Klistra in annonsen här..."
+                      className="mt-2 min-h-28"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-3">
+                    <label className="text-sm font-medium">Länk till jobbannonsen</label>
+                    <input
+                      type="url"
+                      value={annonsUrl}
+                      onChange={(e) => setAnnonsUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="mt-2 w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Vi läser annonstexten från länken. Om sidan kräver inloggning ber vi dig klistra in texten i stället.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
