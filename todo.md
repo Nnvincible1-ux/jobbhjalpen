@@ -175,3 +175,13 @@
 - [x] Frontend visar senaste GILTIGA resultat (hoppar över legacy refusal-meddelanden)
 - [x] Bättre nonsensdetektering (upprepade ord: "banan banan banan tulpan")
 - [x] 34/34 tester pass; verifierat live (dravel x1, dravel x2, riktig justering)
+
+
+## Innehållsvalidering (före betalning) + IP-skydd — klart
+- [x] AI-innehållskoll före betalning: är dokumentet ett CV? är annonstexten en jobbannons?
+- [x] Riktat felmeddelande (dokument vs annons) + "försök kvar"
+- [x] Max 3 misslyckade innehållsförsök per IP+tjänst, sen tillfällig blockering
+- [x] IP rate limiting (12/min, 10 min block) mot missbruk/DDoS på upload
+- [x] Fail-open om klassificeraren strular (blockerar aldrig ärlig kund pga fel i AI)
+- [x] Org-flödet (coach) hoppar över konsumentvalideringen
+- [x] 36/36 tester; verifierat live (fel dokument, fel annons, korrekt = släpps igenom)
