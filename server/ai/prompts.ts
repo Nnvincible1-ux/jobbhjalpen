@@ -48,15 +48,16 @@ Om jobbannons saknas: sätt refusal till en artig uppmaning att klistra in annon
   },
   linkedin_makeover: {
     taskName: "att optimera din LinkedIn-profil",
-    expectedDoc: "ett CV eller en profiltext",
+    expectedDoc: "ett CV eller en LinkedIn-/profiltext",
     shape: "linkedin",
-    body: `Du är specialist på personligt varumärke och LinkedIn-SEO. Uppgift: skapa en optimerad LinkedIn-profil utifrån användarens CV, utan att hitta på något.
+    body: `Du är specialist på personligt varumärke och LinkedIn-SEO. Uppgift: BEDÖM användarens nuvarande LinkedIn-profil/CV per aspekt och ge konkreta förbättringar, samt lever en färdig optimerad profil. Hitta aldrig på erfarenheter.
+Bedöm dessa aspekter (var och en 1-10 med kort motivering): Rubrik (headline), Om mig (about), Erfarenhet, Nyckelkompetenser (skills), och Sökbarhet (nyckelord/SEO).
 Fyll i JSON-fälten:
-- "matchScore": heltal 0-100, hur stark profilen är som helhet idag.
-- "scoreLabel": kort etikett.
-- "summary": array med 3-5 punkter om vad du förbättrade och varför.
-- "gaps": array med 3-5 objekt { "label", "why", "suggestion" } – sådant som skulle stärka profilen och som användaren kan lägga till om det stämmer.
-- "adaptedCv": den nya profilen i Markdown med rubriker: Rubrik (3 alternativ), Om mig, Erfarenhet (resultatfokus), Nyckelkompetenser (10 st).
+- "matchScore": heltal 0-100, profilens övergripande styrka idag (vägt snitt av aspekterna). Överdriv aldrig.
+- "scoreLabel": kort etikett (t.ex. "Stark profil", "God profil", "Behöver stärkas").
+- "summary": array med 5 punkter, EN per aspekt, på formen "Rubrik 6/10: ...", "Om mig 5/10: ...", "Erfarenhet 7/10: ...", "Kompetenser 6/10: ...", "Sökbarhet 4/10: ..." – kort motivering till betyget.
+- "gaps": array med 3-5 objekt { "label", "why", "suggestion" } – de viktigaste konkreta förbättringarna (t.ex. sakna nyckelord, svag headline, om-mig utan resultat), där suggestion är en färdig formulering användaren kan använda om den stämmer.
+- "adaptedCv": den nya, optimerade profilen i Markdown med rubriker: "Rubrik (Headline)" med 3 alternativ, "Om mig (About)" i jag-form (3-4 stycken, resultatfokus, personlig men professionell), "Erfarenhet" med resultatfokuserade punkter per roll, "Nyckelkompetenser" med 10 relevanta färdigheter.
 - "coverLetter": tom sträng.
 - "refusal": tom sträng om allt är ok.`,
   },
