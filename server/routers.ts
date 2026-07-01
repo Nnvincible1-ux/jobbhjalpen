@@ -152,16 +152,40 @@ export const appRouter = router({
           throw new TRPCError({ code: "FORBIDDEN", message: "Dina justeringsförsök är förbrukade." });
         }
 
-        // Reject meaningless comments WITHOUT spending a round.
+        // Nonsense/gibberish handling with a 2-strikes rule. The existing result is
+        // ALWAYS preserved (we never run the AI or overwrite the stored message here).
         if (!isMeaningfulFeedback(input.feedback)) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Skriv en konkret önskan (minst en mening) om vad du vill justera, så att vi kan göra en vettig ändring.",
+          const strikes = s.nonsenseStrikes ?? 0;
+          if (strikes === 0) {
+            // First time: gentle nudge, no round spent.
+            await updateSession(input.id, { nonsenseStrikes: 1 });
+            return {
+              nonsense: true,
+              roundSpent: false,
+              message: "Jag uppfattade inte vad du vill justera. Beskriv konkret vad jag ska ändra, till exempel 'lyft fram min ledarerfarenhet' eller 'gör tonen mer formell'.",
+              remainingRounds: s.remainingRounds,
+              locked: false,
+            };
+          }
+          // Repeated nonsense: firm, and it costs a round.
+          const remaining = s.remainingRounds - 1;
+          await updateSession(input.id, {
+            nonsenseStrikes: 0,
+            remainingRounds: remaining,
+            status: remaining <= 0 ? "locked" : "completed",
           });
+          return {
+            nonsense: true,
+            roundSpent: true,
+            message:
+              "Jag kan fortfarande inte utläsa något konkret att justera, så den här rundan räknas som ett justeringsförsök. Ditt resultat är orört. Beskriv gärna tydligt vad du vill ändra nästa gång.",
+            remainingRounds: remaining,
+            locked: remaining <= 0,
+          };
         }
 
+        // Meaningful feedback: reset strikes and run the AI.
         const history = (await getMessages(input.id)).map((m) => ({ role: m.role, content: m.content }));
-        await addMessage(input.id, "user", input.feedback);
         const result = await adjustService({
           promptKey: service.promptKey,
           history,
@@ -169,9 +193,25 @@ export const appRouter = router({
           annonsText: s.annonsText,
           feedback: input.feedback,
         });
+
+        // If the model refused (off-topic guardrail), keep the existing result and
+        // do NOT spend a round or overwrite the stored message.
+        if (result.refusal) {
+          await updateSession(input.id, { nonsenseStrikes: 0 });
+          return {
+            refused: true,
+            message: result.refusal,
+            remainingRounds: s.remainingRounds,
+            locked: false,
+          };
+        }
+
+        // Valid adjustment: store the new result and spend a round.
+        await addMessage(input.id, "user", input.feedback);
         await addMessage(input.id, "assistant", JSON.stringify(result));
         const remaining = s.remainingRounds - 1;
         await updateSession(input.id, {
+          nonsenseStrikes: 0,
           remainingRounds: remaining,
           status: remaining <= 0 ? "locked" : "completed",
         });

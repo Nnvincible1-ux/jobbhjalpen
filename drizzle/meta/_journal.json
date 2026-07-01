@@ -71,6 +71,13 @@
       "when": 1782711508509,
       "tag": "0009_busy_glorian",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1782914363143,
+      "tag": "0010_gorgeous_chronomancer",
+      "breakpoints": true
     }
   ]
 }

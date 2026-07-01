@@ -92,6 +92,12 @@ export function isMeaningfulFeedback(feedback: string): boolean {
   if (!/[aeiouyåäöAEIOUYÅÄÖ]/.test(t)) return false;
   // Reject a single repeated char like "aaaaaaaaaa".
   if (/^(.)\1+$/.test(t.replace(/\s/g, ""))) return false;
+  // Reject when almost everything is the same repeated word (e.g. "banan banan banan tulpan").
+  const lower = words.map((w) => w.toLowerCase());
+  const unique = new Set(lower);
+  if (lower.length >= 3 && unique.size <= Math.ceil(lower.length / 3)) return false;
+  // Require at least a couple of distinct words to express intent.
+  if (unique.size < 3) return false;
   return true;
 }
 

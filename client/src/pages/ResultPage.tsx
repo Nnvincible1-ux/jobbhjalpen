@@ -80,8 +80,17 @@ export default function ResultPage() {
     () => session?.messages.filter((m) => m.role === "assistant") ?? [],
     [session]
   );
-  const latest = assistantMsgs[assistantMsgs.length - 1];
-  const result = useMemo(() => (latest ? parseResult(latest.content) : null), [latest]);
+  // Pick the latest assistant message that is an actual result (skip legacy
+  // refusal-only messages so a past off-topic reply never becomes the result).
+  const result = useMemo(() => {
+    for (let i = assistantMsgs.length - 1; i >= 0; i--) {
+      const parsed = parseResult(assistantMsgs[i].content);
+      if (parsed && !parsed.refusal && (parsed.adaptedCv || parsed.summary.length || parsed.gaps.length)) {
+        return parsed;
+      }
+    }
+    return null;
+  }, [assistantMsgs]);
 
   const isPaid = session?.paymentStatus === "paid";
   const loading = confirming || sessionQuery.isLoading;
@@ -103,9 +112,13 @@ export default function ResultPage() {
     adjustMutation.mutate(
       { id, feedback: text },
       {
-        onSuccess: (r) => {
+        onSuccess: (r: any) => {
           utils.session.get.invalidate({ id });
-          if (r.locked) toast.info("Dina justeringsförsök är nu förbrukade.");
+          if (r?.nonsense || r?.refused) {
+            toast.info(r.message);
+          } else if (r?.locked) {
+            toast.info("Dina justeringsförsök är nu förbrukade.");
+          }
         },
         onError: (e) => toast.error(e.message),
       }
@@ -121,10 +134,16 @@ export default function ResultPage() {
     adjustMutation.mutate(
       { id, feedback: t },
       {
-        onSuccess: (r) => {
-          setFeedback("");
+        onSuccess: (r: any) => {
           utils.session.get.invalidate({ id });
-          if (r.locked) toast.info("Dina justeringsförsök är nu förbrukade.");
+          // Nonsense or off-topic refusal: keep the result, show a message.
+          if (r?.nonsense || r?.refused) {
+            toast.warning(r.message);
+            if (r?.roundSpent || r?.locked) setFeedback("");
+            return;
+          }
+          setFeedback("");
+          if (r?.locked) toast.info("Dina justeringsförsök är nu förbrukade.");
         },
         onError: (e) => toast.error(e.message),
       }

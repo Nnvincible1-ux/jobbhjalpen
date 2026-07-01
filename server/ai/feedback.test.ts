@@ -9,6 +9,8 @@ describe("isMeaningfulFeedback", () => {
     expect(isMeaningfulFeedback("aaaaaaaaaa")).toBe(false);
     expect(isMeaningfulFeedback("123 456 789")).toBe(false); // no letters
     expect(isMeaningfulFeedback("a b c")).toBe(false); // too few real words
+    expect(isMeaningfulFeedback("banan banan banan tulpan")).toBe(false); // repeated words
+    expect(isMeaningfulFeedback("hej hej hej")).toBe(false);
   });
 
   it("accepts a concrete sentence", () => {
