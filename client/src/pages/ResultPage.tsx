@@ -23,7 +23,9 @@ export default function ResultPage() {
 
   const [feedback, setFeedback] = useState("");
   const [confirming, setConfirming] = useState(true);
+  const [runError, setRunError] = useState(false);
   const ranRef = useRef(false);
+  const attemptsRef = useRef(0);
 
   // Confirm payment (webhook may already have done it) then run.
   useEffect(() => {
@@ -61,13 +63,20 @@ export default function ResultPage() {
     }
     if (isPaid && !hasResult && !runMutation.isPending) {
       ranRef.current = true;
+      setRunError(false);
       runMutation.mutate(
         { id },
         {
           onSuccess: () => utils.session.get.invalidate({ id }),
-          onError: (e) => {
+          onError: () => {
+            // Auto-retry a couple of times (handles transient timeouts / gateway).
+            attemptsRef.current += 1;
             ranRef.current = false;
-            toast.error(e.message);
+            if (attemptsRef.current < 3) {
+              setTimeout(() => utils.session.get.invalidate({ id }), 1500);
+            } else {
+              setRunError(true);
+            }
           },
         }
       );
@@ -91,6 +100,13 @@ export default function ResultPage() {
     }
     return null;
   }, [assistantMsgs]);
+
+  const retryRun = () => {
+    attemptsRef.current = 0;
+    ranRef.current = false;
+    setRunError(false);
+    utils.session.get.invalidate({ id });
+  };
 
   const isPaid = session?.paymentStatus === "paid";
   const loading = confirming || sessionQuery.isLoading;
@@ -183,7 +199,14 @@ export default function ResultPage() {
                   {new Date(session.expiresAt).toLocaleDateString("sv-SE")}. Vi har också mejlat den till dig.
                 </p>
               )}
-              {working || adjusting ? (
+              {runError && !result ? (
+                <div className="rounded-2xl border bg-card p-8 text-center shadow-sm">
+                  <p className="text-sm text-muted-foreground">
+                    Det tog längre tid än väntat att skapa ditt resultat. Din betalning är registrerad och inget är förlorat.
+                  </p>
+                  <Button className="mt-4" onClick={retryRun}>Försök igen</Button>
+                </div>
+              ) : working || adjusting ? (
                 <div className="rounded-2xl border bg-card p-8 text-center shadow-sm">
                   <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                   <p className="mt-3 text-sm text-muted-foreground">
