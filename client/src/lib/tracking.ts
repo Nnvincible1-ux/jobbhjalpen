@@ -10,6 +10,8 @@
  */
 
 const CONSENT_KEY = "jh_cookie_consent";
+// Google Tag Manager container. Loaded only after consent (strict GDPR).
+const GTM_ID = "GTM-TLMHG5MZ";
 
 type Settings = { fbPixelId: string | null; ga4Id: string | null };
 
@@ -21,6 +23,7 @@ declare global {
     _fbq?: unknown;
     dataLayer?: unknown[];
     gtag?: (...args: unknown[]) => void;
+    __gtmLoaded?: boolean;
   }
 }
 
@@ -67,6 +70,17 @@ function loadFacebookPixel(pixelId: string) {
   fbq?.("track", "PageView");
 }
 
+function loadGtm(id: string) {
+  if (window.__gtmLoaded) return;
+  window.__gtmLoaded = true;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = `https://www.googletagmanager.com/gtm.js?id=${id}`;
+  document.head.appendChild(s);
+}
+
 function loadGa4(measurementId: string) {
   if (window.gtag) return;
   const s = document.createElement("script");
@@ -84,10 +98,12 @@ function loadGa4(measurementId: string) {
 
 async function loadIfConsented() {
   if (loaded || !hasConsent()) return;
+  // GTM loads on consent regardless of pixel/GA4 settings.
+  loadGtm(GTM_ID);
+  loaded = true;
   const { fbPixelId, ga4Id } = await fetchSettings();
   if (fbPixelId) loadFacebookPixel(fbPixelId);
   if (ga4Id) loadGa4(ga4Id);
-  loaded = Boolean(fbPixelId || ga4Id);
 }
 
 /** Initialise tracking: load now if consented, otherwise wait for the consent event. */
